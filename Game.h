@@ -1,0 +1,68 @@
+#pragma once
+#include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
+#include "GameTypes.h"
+
+class Game {
+public:
+    Game();
+    void run();
+
+private:
+    sf::RenderWindow win;
+    sf::Font fnt;
+    GS gs; 
+    Player pl;
+    std::string inp;
+    float cur, at, shk, mt, it;
+    int selClass, selAct;
+    std::vector<std::vector<Tile>> map;
+    std::vector<Enemy> elist;
+    Enemy batt{}; 
+    BS bs = BS::PTURN;
+    std::string res, evtMsg;
+    std::vector<std::string> log;
+
+    // --- Core (คนที่ 1) ---
+    void events();
+    void handleKey(sf::Keyboard::Key k);
+    void update(float dt);
+    void move(int dx, int dy);
+    void loadFont();
+    void addLog(const std::string& s);
+
+    // --- Battle (คนที่ 2) ---
+    void initPlayer();
+    std::string jname(Job j);
+    std::string skname();
+    void gainExp(int v);
+    int dmg(int a, int d, float m = 1.f);
+    void startBattle(Enemy e);
+    bool battleEnd();
+    void doPlayerAction(int a);
+    void enemyTurn();
+
+    // --- UI (คนที่ 3) ---
+    void draw();
+    void dt_(const std::string& s, unsigned sz, sf::Color c, float x, float y);
+    void dtc(const std::string& s, unsigned sz, sf::Color c, float cx, float y);
+    void dr(float x, float y, float w, float h, sf::Color c, bool ol=false, sf::Color oc=sf::Color::White);
+    void bar(float x, float y, float w, float h, float ratio, sf::Color fg, const std::string& lb="");
+    void dIntro();
+    void dInput(const std::string& prompt, bool isAge);
+    void dClass();
+    void dMap(float sx, float sy);
+    void dBattle(float sx, float sy);
+    void dEvent();
+    void dEnd(bool win);
+
+    // --- Dungeon (คนที่ 4) ---
+    void genMap();
+    void revealAll();
+    Enemy mkEnemy(bool boss);
+    Item mkItem();
+    void updateVis();
+    int enemyCount();
+    void descend();
+    void trigEvt();
+};
