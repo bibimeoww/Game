@@ -1,7 +1,7 @@
 #include "Game.h"
 #include <iostream>
 
-Game::Game() : win(sf::VideoMode({W,H}), "RPG Dungeon Crawler", sf::Style::Titlebar|sf::Style::Close),
+Game::Game() : win(sf::VideoMode({W,H}), "DUNGEON OF FATE", sf::Style::Titlebar|sf::Style::Close),
                gs(GS::INTRO), selClass(0), selAct(0), cur(0), at(0), shk(0), mt(0), it(0) {
     win.setFramerateLimit(60);
     loadFont();
