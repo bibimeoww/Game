@@ -6,7 +6,7 @@
 #include <cstdlib>
 
 // ── Constants ──────────────────────────────────────────────
-const unsigned W = 1024, H = 768;
+const unsigned W = 1180, H = 768;
 const int COLS = 18, ROWS = 13, TS = 48, OX = 32, OY = 80;
 
 // ── Colors (Extern declaration) ────────────────────────────

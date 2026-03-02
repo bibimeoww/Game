@@ -90,26 +90,78 @@ void Game::dClass() {
 
 void Game::dMap(float sx, float sy) {
     dr(0, 0, (float)W, 70, sf::Color(15,10,35));
-    dt_("Floor:" + ts(pl.floor) + "  " + pl.name + " Lv." + ts(pl.lv), 18, C_TXT, 20, 38);
+    dt_("DUNGEON CRAWLER RPG", 22, sf::Color(150,120,220), 20, 10);
+    dt_("Floor:" + ts(pl.floor) + "/9  " + pl.name + " Lv." + ts(pl.lv) + "  Score:" + ts(pl.score), 18, C_TXT, 20, 38);
+
+    // 1. วาดแผนที่
     for(int r=0; r<ROWS; r++) for(int c=0; c<COLS; c++) {
         float tx = OX + sx + c * TS, ty = OY + sy + r * TS;
         Tile& t = map[r][c];
         if(!t.vis) { dr(tx, ty, TS-1, TS-1, sf::Color(5,5,10)); continue; }
         sf::Color bg = t.t == TT::WALL ? C_WALL : (t.t == TT::STAIR ? sf::Color(20,60,30) : C_FLOOR);
         dr(tx, ty, TS-1, TS-1, bg);
-        if(t.t == TT::STAIR) dt_("v", 14, C_STAIR, tx + 16, ty + 4);
-        else if(t.t == TT::ITEM) dr(tx + 14, ty + 14, 20, 20, C_ITEM);
-        else if(t.t == TT::ENE) dr(tx + 10, ty + 10, 20, 20, C_ENE);
-        else if(t.t == TT::BOSS) dr(tx + 5, ty + 5, 30, 30, C_BOSS);
+        if(t.t == TT::WALL) dr(tx+4, ty+4, TS-9, TS-9, sf::Color(45,38,72,160));
+        else if(t.t == TT::STAIR) { for(int i=0; i<3; i++) dr(tx+8+i*10, ty+28-i*7, 8, 7, C_STAIR); dt_("v", 14, C_STAIR, tx+16, ty+4); }
+        else if(t.t == TT::ITEM) { dr(tx+14, ty+14, 20, 20, C_ITEM); dt_("*", 20, C_ITEM, tx+16, ty+12); }
+        else if(t.t == TT::ENE) { float p = 0.85f+0.15f*std::sin(at*3); int s = (int)(30*p); dr(tx+(TS-s)/2, ty+(TS-s)/2, (float)s, (float)s, C_ENE); dt_("E", 18, sf::Color::White, tx+15, ty+12); }
+        else if(t.t == TT::BOSS) { float p = 0.8f+0.2f*std::sin(at*4); int s = (int)(38*p); dr(tx+(TS-s)/2, ty+(TS-s)/2, (float)s, (float)s, C_BOSS); dt_("B", 20, sf::Color::White, tx+14, ty+10); }
     }
+
+    // 2. วาดตัวละคร
     float pp = OX + sx + pl.x * TS, py2 = OY + sy + pl.y * TS;
-    dr(pp + 8, py2 + 8, 30, 30, C_PC);
-    
-    // Side panel & log UI (simplified for brevity, matching previous style)
+    float bob = std::sin(at*4)*2.f;
+    dr(pp+8, py2+8+bob, 30, 30, C_PC);
+    dt_("@", 22, sf::Color::White, pp+9, py2+9+bob);
+
+    // 3. Side Panel (เมนูฝั่งขวา)
     float ux = OX + COLS * TS + 16.f, uy = (float)OY;
     dr(ux, uy, 210, (float)(ROWS * TS), C_UI);
     dr(ux, uy, 210, (float)(ROWS * TS), sf::Color::Transparent, true, sf::Color(80,60,120));
-    dt_("HP: " + ts(pl.s.hp) + "/" + ts(pl.s.mhp), 16, C_HP, ux + 10, uy + 50);
+    
+    float y = uy + 10;
+    dt_(pl.name, 18, C_GOLD, ux+10, y); y+=26;
+    dt_(jname(pl.job) + " Age:" + ts(pl.age), 13, C_TXT, ux+10, y); y+=22;
+    
+    sf::Color hc = pl.s.hp > pl.s.mhp/3 ? C_HP : C_HPL;
+    dt_("HP:", 13, C_TXT, ux+10, y);
+    bar(ux+34, y+2, 162, 13, (float)pl.s.hp/pl.s.mhp, hc, ts(pl.s.hp) + "/" + ts(pl.s.mhp)); y+=22;
+    
+    dt_("EXP:", 13, C_TXT, ux+10, y);
+    bar(ux+38, y+2, 158, 13, (float)pl.exp/pl.nexp, C_EXP, ts(pl.exp) + "/" + ts(pl.nexp)); y+=22;
+    
+    dt_("Lv." + ts(pl.lv), 18, sf::Color(200,180,255), ux+10, y); y+=24;
+    dt_("ATK:" + ts(pl.s.atk) + " DEF:" + ts(pl.s.def) + " SPD:" + ts(pl.s.spd), 12, C_TXT, ux+10, y); y+=18;
+    dt_("Gold: " + ts(pl.gold), 13, C_GOLD, ux+10, y); y+=20;
+
+    int ec = enemyCount();
+    sf::Color ecc = ec == 0 ? C_STAIR : C_ENE;
+    dt_("Enemies: " + ts(ec), 13, ecc, ux+10, y); y+=16;
+    if(ec == 0) { dt_("[N] Next Floor!", 13, C_GOLD, ux+10, y); y+=16; }
+
+    dt_("Items:" + ts(pl.inv.size()), 12, C_TXT, ux+10, y); y+=14;
+    for(auto& item : pl.inv) { dt_("- " + item.name, 11, C_ITEM, ux+10, y); y+=13; }
+    y+=6;
+    
+    dt_("LEGEND:", 12, sf::Color(100,90,140), ux+10, y); y+=16;
+    dr(ux+10, y+2, 10, 10, C_ENE);   dt_("Enemy",  11, C_TXT, ux+24, y); y+=14;
+    dr(ux+10, y+2, 10, 10, C_BOSS);  dt_("Boss",   11, C_TXT, ux+24, y); y+=14;
+    dr(ux+10, y+2, 10, 10, C_ITEM);  dt_("Item",   11, C_TXT, ux+24, y); y+=14;
+    dr(ux+10, y+2, 10, 10, C_STAIR); dt_("Stairs", 11, C_TXT, ux+24, y);
+
+    // 4. Bottom bar & Log messages
+    float cy2 = (float)(OY + ROWS * TS + 5);
+    int ec2 = enemyCount();
+    std::string hint = ec2 == 0 ? 
+        "ALL ENEMIES CLEARED! >>> Press [N] to go to next floor <<< " : 
+        "WASD/Arrows:Move | Step on [v] to descend | Enemies left: " + ts(ec2);
+    sf::Color hcol = ec2 == 0 ? C_GOLD : sf::Color(100,90,140);
+    dt_(hint, 13, hcol, (float)OX, cy2);
+
+    int ls = (int)log.size(); int st = std::max(0, ls-3);
+    for(int i = st; i < ls; i++) {
+        sf::Color lc = (i == ls-1) ? C_TXT : sf::Color(100,90,130);
+        dt_(log[i], 12, lc, (float)OX, cy2 + 16 + (i-st) * 15.f);
+    }
 }
 
 void Game::dBattle(float sx, float sy) {
