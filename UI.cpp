@@ -50,42 +50,89 @@ void Game::dIntro() {
         float py = (float)((i*79 + (int)(at*15)) % H);
         dr(px, py, 2, 2, sf::Color(80,60,120,100));
     }
-    dr(180, 140, 664, 230, sf::Color(20,15,40,220));
-    dr(180, 140, 664, 230, sf::Color::Transparent, true, sf::Color(120,80,200));
-    dtc("DUNGEON OF FATE", 48, sf::Color(180,140,255), 512, 162);
-    dtc("A Turn-Based Adventure", 22, sf::Color(140,120,200), 512, 255);
+
+    float boxW = 664.0f;
+    float boxH = 230.0f;
+    float boxX = (W - boxW) / 2.0f;
+    float boxY = 140.0f;
+
+    dr(boxX, boxY, boxW, boxH, sf::Color(20,15,40,220));
+    dr(boxX, boxY, boxW, boxH, sf::Color::Transparent, true, sf::Color(120,80,200));
+    
+    dtc("DUNGEON OF FATE", 48, sf::Color(180,140,255), W / 2.0f, 162);
+    dtc("A Turn-Based Adventure", 22, sf::Color(140,120,200), W / 2.0f, 255);
+
     uint8_t a = (uint8_t)(150 + (int)(80 * std::sin(at * 3)));
-    dtc("Press ENTER or SPACE to begin", 20, sf::Color(200,180,255,a), 512, 420);
+    dtc("Press ENTER or SPACE to begin", 20, sf::Color(200,180,255,a), W / 2.0f, 420);
     dt_("WASD/Arrows=Move  ENTER=Confirm  Arrows=Select  N=Next Floor", 13, sf::Color(100,90,150), 180, 560);
 }
 
 void Game::dInput(const std::string& prompt, bool isAge) {
-    dr(152, 250, 720, 230, C_UI);
-    dr(152, 250, 720, 230, sf::Color::Transparent, true, sf::Color(120,80,200));
-    dt_(prompt, 22, sf::Color(200,180,255), 172, 275);
+
+    float boxW = 720.0f;
+    float boxH = 230.0f;
+    float boxX = (W - boxW) / 2.0f;
+    float boxY = 250.0f;
+    float textX = boxX + 20.0f; //ระยะขอบตัวหนังสือในกล่อง
+
+    dr(boxX, boxY, boxW, boxH, C_UI);
+    dr(boxX, boxY, boxW, boxH, sf::Color::Transparent, true, sf::Color(120,80,200));
+    
+    dt_(prompt, 22, sf::Color(200,180,255), textX, boxY + 25.0f);
+    
     std::string d = inp + (cur < 1.f ? "_" : " ");
-    dt_(d, 34, C_GOLD, 172, 322);
-    dt_("Press ENTER to confirm", 16, sf::Color(120,110,160), 172, 420);
-    if(isAge && !pl.name.empty()) dt_("Name: " + pl.name, 18, C_TXT, 172, 455);
+    dt_(d, 34, C_GOLD, textX, boxY + 72.0f);
+
+    dt_("Press ENTER to confirm", 16, sf::Color(120,110,160), textX, boxY + 170.0f);
+
+    if(isAge && !pl.name.empty()){
+        dt_("Name: " + pl.name, 18, C_TXT, textX, boxY + 205.0f);
+    } 
 }
 
 void Game::dClass() {
-    dtc("Choose Your Class", 36, sf::Color(200,180,255), 512, 25);
+    dtc("Choose Your Class", 36, sf::Color(200,180,255), W / 2.0f, 25);
+    dtc("Hero: " + pl.name + "  Age: " + ts(pl.age), 18, C_TXT, W / 2.0f, 78);
+
     Job cls[] = {Job::WAR, Job::MAG, Job::ROG};
     sf::Color cols[] = {sf::Color(220,100,80), sf::Color(80,120,255), sf::Color(120,220,100)};
     const char* icons[] = {"[W]", "[M]", "[R]"};
-    const char* desc[] = {"High HP+DEF\nSkill: Power Strike", "High ATK\nSkill: Fireball", "High SPD\nSkill: Backstab"};
+    const char* desc[] = {"High HP+DEF\nSkill: Power Strike\n(2x ATK, 1-turn CD)",
+                          "High ATK\nSkill: Fireball\n(3x, ignore DEF, 2-turn CD)",
+                          "High SPD\nSkill: Backstab\n(2.5x true dmg, 1-turn CD)"};
     Stats st[] = {{120,120,18,12,8}, {80,80,28,6,10}, {100,100,20,8,14}};
+    
+    // 2. คำนวณจุดกึ่งกลางของกล่องอาชีพทั้ง 3 อัน
+    float boxWidth = 250.0f;
+    float gap = 40.0f; // ระยะห่างระหว่างกล่อง
+    float totalWidth = (boxWidth * 3) + (gap * 2);
+    float startX = (W - totalWidth) / 2.0f; // จุดเริ่มต้นวาดกล่องแรก
+
     for(int i=0; i<3; i++) {
-        float cx = 110 + (float)(i * 270), cy = 130;
+        // ใช้ startX ที่คำนวณมาจัดตำแหน่งให้กล่อง
+        float cx = startX + (float)(i * (boxWidth + gap)); 
+        float cy = 130.0f;
+        
         bool sel = (selClass == i);
         sf::Color c = sel ? cols[i] : sf::Color(cols[i].r, cols[i].g, cols[i].b, 140);
-        dr(cx, cy, 250, 390, sel ? sf::Color(40,35,70) : sf::Color(20,15,40));
-        dr(cx, cy, 250, 390, sf::Color::Transparent, true, c);
-        dtc(icons[i], 48, c, cx + 125, cy + 10);
-        dtc(jname(cls[i]), 22, c, cx + 125, cy + 78);
-        dt_(desc[i], 12, sf::Color(180,170,200), cx + 10, cy + 115);
+        dr(cx, cy, boxWidth, 390, sel ? sf::Color(40,35,70) : sf::Color(20,15,40));
+        dr(cx, cy, boxWidth, 390, sf::Color::Transparent, true, c);
+        if(sel) dr(cx, cy, boxWidth, 4, c);
+        
+        // วาดไอคอนและข้อความให้อยู่กึ่งกลางกล่อง
+        dtc(icons[i], 48, c, cx + (boxWidth / 2.0f), cy + 10);
+        dtc(jname(cls[i]), 22, c, cx + (boxWidth / 2.0f), cy + 78);
+        dt_(desc[i], 11, sf::Color(180,170,200), cx + 10, cy + 115);
+        
+        float ys = cy + 215; 
+        dt_("HP:", 12, C_TXT, cx+8, ys); bar(cx+36, ys+2, 200, 11, (float)st[i].mhp/140.f, C_HP); ys+=20;
+        dt_("ATK:",12, C_TXT, cx+8, ys); bar(cx+36, ys+2, 200, 11, (float)st[i].atk/30.f, C_ENE); ys+=20;
+        dt_("DEF:",12, C_TXT, cx+8, ys); bar(cx+36, ys+2, 200, 11, (float)st[i].def/15.f, sf::Color(80,140,220)); ys+=20;
+        dt_("SPD:",12, C_TXT, cx+8, ys); bar(cx+36, ys+2, 200, 11, (float)st[i].spd/15.f, C_STAIR);
     }
+    
+    // จัดคำแนะนำด้านล่างให้อยู่กึ่งกลาง
+    dtc("LEFT/RIGHT select  |  ENTER confirm", 18, sf::Color(150,130,200), W / 2.0f, 548);
 }
 
 void Game::dMap(float sx, float sy) {
