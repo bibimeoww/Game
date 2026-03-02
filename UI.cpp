@@ -52,7 +52,7 @@ void Game::dIntro() {
     }
     dr(180, 140, 664, 230, sf::Color(20,15,40,220));
     dr(180, 140, 664, 230, sf::Color::Transparent, true, sf::Color(120,80,200));
-    dtc("DUNGEON CRAWLER RPG", 48, sf::Color(180,140,255), 512, 162);
+    dtc("DUNGEON OF FATE", 48, sf::Color(180,140,255), 512, 162);
     dtc("A Turn-Based Adventure", 22, sf::Color(140,120,200), 512, 255);
     uint8_t a = (uint8_t)(150 + (int)(80 * std::sin(at * 3)));
     dtc("Press ENTER or SPACE to begin", 20, sf::Color(200,180,255,a), 512, 420);
