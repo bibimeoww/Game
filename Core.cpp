@@ -2,9 +2,38 @@
 #include <iostream>
 
 Game::Game() : win(sf::VideoMode({W,H}), "DUNGEON OF FATE", sf::Style::Titlebar|sf::Style::Close),
+               sprPlayer(texPlayer), sprWall(texWall), sprFloor(texFloor), 
+               sprEne(texEne), sprBoss(texBoss), sprItem(texItem), sprStair(texStair), 
+               sprWar(texWar), sprMag(texMag), sprRog(texRog),
                gs(GS::INTRO), selClass(0), selAct(0), cur(0), at(0), shk(0), mt(0), it(0) {
+    
     win.setFramerateLimit(60);
     loadFont();
+
+    // ฟังก์ชันตัวช่วยโหลดรูปและปรับขนาด
+    auto setupSprite = [](sf::Texture& tex, sf::Sprite& spr, const std::string& file, float targetSize) {
+        if(tex.loadFromFile(file)) {
+            tex.setSmooth(false);
+            spr.setTexture(tex, true);
+            spr.setScale({targetSize / tex.getSize().x, targetSize / tex.getSize().y});
+        } else {
+            printf("WARNING: Image %s not found!\n", file.c_str());
+        }
+    };
+
+    // โหลดรูปแผนที่และตัวละคร
+    setupSprite(texPlayer, sprPlayer, "warrior.png", 40.0f); 
+    setupSprite(texWall, sprWall, "wall.png", 48.0f);
+    setupSprite(texFloor, sprFloor, "floor.png", 48.0f);
+    setupSprite(texEne, sprEne, "enemy.png", 40.0f);
+    setupSprite(texBoss, sprBoss, "boss.png", 48.0f);
+    setupSprite(texItem, sprItem, "item.png", 32.0f);
+    setupSprite(texStair, sprStair, "stair.png", 40.0f);
+    
+    // โหลดรูป 3 อาชีพหน้าเลือกตัวละคร
+    setupSprite(texWar, sprWar, "warrior.png", 80.0f);
+    setupSprite(texMag, sprMag, "mage.png", 80.0f);
+    setupSprite(texRog, sprRog, "rouge.png", 80.0f);
 }
 
 void Game::run() {
@@ -64,7 +93,23 @@ void Game::handleKey(sf::Keyboard::Key k) {
         case GS::CLASS:
             if(k == K::Left) selClass = (selClass + 2) % 3;
             if(k == K::Right) selClass = (selClass + 1) % 3;
-            if(k == K::Enter) { pl.job = (Job)selClass; initPlayer(); genMap(); gs = GS::MAP; }
+            if(k == K::Enter) { 
+                pl.job = (Job)selClass; 
+                initPlayer(); 
+                genMap(); 
+                gs = GS::MAP;
+                
+                if(pl.job == Job::WAR) {
+                    sprPlayer.setTexture(texWar, true);
+                    sprPlayer.setScale({40.0f / texWar.getSize().x, 40.0f / texWar.getSize().y});
+                } else if(pl.job == Job::MAG) {
+                    sprPlayer.setTexture(texMag, true);
+                    sprPlayer.setScale({40.0f / texMag.getSize().x, 40.0f / texMag.getSize().y});
+                } else if(pl.job == Job::ROG) {
+                    sprPlayer.setTexture(texRog, true);
+                    sprPlayer.setScale({40.0f / texRog.getSize().x, 40.0f / texRog.getSize().y});
+                }
+            }
             break;
         case GS::MAP:
             if(k == K::W || k == K::Up) move(0,-1);

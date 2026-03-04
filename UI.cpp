@@ -96,20 +96,21 @@ void Game::dClass() {
 
     Job cls[] = {Job::WAR, Job::MAG, Job::ROG};
     sf::Color cols[] = {sf::Color(220,100,80), sf::Color(80,120,255), sf::Color(120,220,100)};
-    const char* icons[] = {"[W]", "[M]", "[R]"};
+    
     const char* desc[] = {"High HP+DEF\nSkill: Power Strike\n(2x ATK, 1-turn CD)",
                           "High ATK\nSkill: Fireball\n(3x, ignore DEF, 2-turn CD)",
                           "High SPD\nSkill: Backstab\n(2.5x true dmg, 1-turn CD)"};
     Stats st[] = {{120,120,18,12,8}, {80,80,28,6,10}, {100,100,20,8,14}};
     
-    // 2. คำนวณจุดกึ่งกลางของกล่องอาชีพทั้ง 3 อัน
     float boxWidth = 250.0f;
-    float gap = 40.0f; // ระยะห่างระหว่างกล่อง
+    float gap = 40.0f; 
     float totalWidth = (boxWidth * 3) + (gap * 2);
-    float startX = (W - totalWidth) / 2.0f; // จุดเริ่มต้นวาดกล่องแรก
+    float startX = (W - totalWidth) / 2.0f; 
+
+    // 1. จัดกลุ่ม Sprite ไว้ใน Array เพื่อดึงไปวาดตามรอบ
+    sf::Sprite* sprClass[] = {&sprWar, &sprMag, &sprRog};
 
     for(int i=0; i<3; i++) {
-        // ใช้ startX ที่คำนวณมาจัดตำแหน่งให้กล่อง
         float cx = startX + (float)(i * (boxWidth + gap)); 
         float cy = 130.0f;
         
@@ -119,25 +120,43 @@ void Game::dClass() {
         dr(cx, cy, boxWidth, 390, sf::Color::Transparent, true, c);
         if(sel) dr(cx, cy, boxWidth, 4, c);
         
-        // วาดไอคอนและข้อความให้อยู่กึ่งกลางกล่อง
-        dtc(icons[i], 48, c, cx + (boxWidth / 2.0f), cy + 10);
-        dtc(jname(cls[i]), 22, c, cx + (boxWidth / 2.0f), cy + 78);
-        dt_(desc[i], 11, sf::Color(180,170,200), cx + 10, cy + 115);
+        // --- 2. ส่วนที่ใช้วาดรูปตัวละครแทนตัวหนังสือ [W] [M] [R] ---
+        sf::Sprite* spr = sprClass[i];
         
-        float ys = cy + 215; 
+        // คำนวณจุดกึ่งกลาง (รูปเราขนาด 80x80 ครึ่งนึงคือ 40)
+        float sprX = cx + (boxWidth / 2.0f) - 40.0f; 
+        float sprY = cy + 20.0f; 
+        
+        // ใส่ลูกเล่นให้รูปที่โดนเลือก
+        if(sel) {
+            spr->setColor(sf::Color::White); // สว่าง 100%
+            sprY += std::sin(at * 5) * 5.0f; // เด้งขึ้นลงดึ๋งๆ
+        } else {
+            spr->setColor(sf::Color(255, 255, 255, 100)); // รูปที่ไม่ได้เลือกให้สีจางลง
+        }
+        
+        spr->setPosition({sprX, sprY});
+        win.draw(*spr);
+        // ---------------------------------------------------
+        
+        // 3. วาดข้อความต่างๆ (ผมขยับพิกัด Y ลงมาเพื่อหลบรูปภาพให้แล้ว)
+        dtc(jname(cls[i]), 22, c, cx + (boxWidth / 2.0f), cy + 120);
+        dt_(desc[i], 11, sf::Color(180,170,200), cx + 10, cy + 155);
+        
+        // วาดหลอดพลัง (ขยับลงมานิดนึงให้สวยงาม)
+        float ys = cy + 240; 
         dt_("HP:", 12, C_TXT, cx+8, ys); bar(cx+36, ys+2, 200, 11, (float)st[i].mhp/140.f, C_HP); ys+=20;
         dt_("ATK:",12, C_TXT, cx+8, ys); bar(cx+36, ys+2, 200, 11, (float)st[i].atk/30.f, C_ENE); ys+=20;
         dt_("DEF:",12, C_TXT, cx+8, ys); bar(cx+36, ys+2, 200, 11, (float)st[i].def/15.f, sf::Color(80,140,220)); ys+=20;
         dt_("SPD:",12, C_TXT, cx+8, ys); bar(cx+36, ys+2, 200, 11, (float)st[i].spd/15.f, C_STAIR);
     }
     
-    // จัดคำแนะนำด้านล่างให้อยู่กึ่งกลาง
     dtc("LEFT/RIGHT select  |  ENTER confirm", 18, sf::Color(150,130,200), W / 2.0f, 548);
 }
 
 void Game::dMap(float sx, float sy) {
     dr(0, 0, (float)W, 70, sf::Color(15,10,35));
-    dt_("DUNGEON CRAWLER RPG", 22, sf::Color(150,120,220), 20, 10);
+    dt_("DUNGEON OF FATE", 22, sf::Color(150,120,220), 20, 10);
     dt_("Floor:" + ts(pl.floor) + "/9  " + pl.name + " Lv." + ts(pl.lv) + "  Score:" + ts(pl.score), 18, C_TXT, 20, 38);
 
     // 1. วาดแผนที่
@@ -157,8 +176,9 @@ void Game::dMap(float sx, float sy) {
     // 2. วาดตัวละคร
     float pp = OX + sx + pl.x * TS, py2 = OY + sy + pl.y * TS;
     float bob = std::sin(at*4)*2.f;
-    dr(pp+8, py2+8+bob, 30, 30, C_PC);
-    dt_("@", 22, sf::Color::White, pp+9, py2+9+bob);
+
+    sprPlayer.setPosition({pp + 8, py2 + 8 + bob});
+    win.draw(sprPlayer);
 
     // 3. Side Panel (เมนูฝั่งขวา)
     float ux = OX + COLS * TS + 16.f, uy = (float)OY;

@@ -11,6 +11,17 @@ public:
 private:
     sf::RenderWindow win;
     sf::Font fnt;
+    //ตัวละครหลัก 
+    sf::Texture texPlayer;
+    sf::Sprite sprPlayer;
+    //กราฟฟิกแผนที่,สิ่งของ
+    sf::Texture texFloor, texWall, texStair, texEne, texBoss, texItem;
+    sf::Sprite sprFloor, sprWall, sprStair, sprEne, sprBoss, sprItem;
+
+    //กราฟฟิกหน้าเลือกอาชีพ
+    sf::Texture texWar, texMag, texRog;
+    sf::Sprite sprWar, sprMag, sprRog;
+    
     GS gs; 
     Player pl;
     std::string inp;
