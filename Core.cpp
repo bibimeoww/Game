@@ -149,32 +149,37 @@ void Game::update(float dt) {
 }
 
 void Game::move(int dx, int dy) {
-    int nx = pl.x + dx, ny = pl.y + dy;
-    if(nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) return;
+    int nx = pl.x + dx;
+    int ny = pl.y + dy;
+
+    if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) return;
+
     Tile& t = map[ny][nx];
-    if(t.t == TT::WALL) return;
 
-    if(t.t == TT::ENE || t.t == TT::BOSS) {
-        if(t.ei >= 0 && t.ei < (int)elist.size()) {
-            Enemy e = elist[t.ei];
-            t.t = TT::FLOOR; t.ei = -1;
-            startBattle(e);
+    // 2. ป้องกันเดินทะลุกำแพง
+    if (t.t == TT::WALL) return;
+
+    pl.x = nx;
+    pl.y = ny;
+
+    if (t.t == TT::ENE || t.t == TT::BOSS) {
+        bool isBoss = (t.t == TT::BOSS);
+        startBattle(mkEnemy(isBoss));
+        t.t = TT::FLOOR; 
+    }
+    else if (t.t == TT::ITEM) {
+        pl.inv.push_back(mkItem());
+        t.t = TT::FLOOR;
+        addLog("Found an Item!");
+    }
+    else if (t.t == TT::STAIR) {
+        if (enemyCount() == 0) {
+            descend();
+        } else {
+            addLog("Defeat all enemies first!");
         }
-        return;
     }
 
-    pl.x = nx; pl.y = ny;
-
-    if(t.t == TT::ITEM) {
-        if(t.item.atk > 0) pl.s.atk += t.item.atk;
-        if(t.item.def > 0) pl.s.def += t.item.def;
-        if(t.item.hp > 0) pl.inv.push_back(t.item);
-        evtMsg = "Found: " + t.item.name + "! " + t.item.desc;
-        t.t = TT::FLOOR; t.item = {};
-        updateVis(); gs = GS::EVENT; return;
-    }
-    if(t.t == TT::STAIR) { descend(); return; }
-
-    if(rnd(1, 100) <= 5) trigEvt();
-    updateVis();
+    t.vis = true;
+    updateVis(); 
 }

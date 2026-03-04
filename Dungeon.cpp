@@ -48,19 +48,27 @@ void Game::genMap() {
     for(int r=0; r<ROWS; r++) for(int c=0; c<COLS; c++) {
         if(map[r][c].t == TT::FLOOR && !(r==pl.y && c==pl.x)) floors.push_back({r,c});
     }
+    
+    elist.clear(); 
+    int numEnemies = 6;
 
-    elist.clear();
-    int fi = 0, ne = std::min(4 + pl.floor * 2, (int)floors.size() / 2);
-    for(int i = 0; i < ne && fi < (int)floors.size(); i++, fi++) {
-        elist.push_back(mkEnemy(false));
-        map[floors[fi].first][floors[fi].second].t = TT::ENE;
-        map[floors[fi].first][floors[fi].second].ei = (int)elist.size() - 1;
+    for (int i = 0; i < numEnemies; i++) {
+        while (true) {
+            // สุ่มพิกัด แถว (r) และ คอลัมน์ (c)
+            int r = rand() % ROWS;
+            int c = rand() % COLS;
+            
+            // กฎการเกิด: ต้องเป็นช่องว่าง (TT::FLOOR) และต้องไม่ทับจุดที่ผู้เล่นยืนอยู่
+            if (map[r][c].t == TT::FLOOR && (r != pl.y || c != pl.x)) {
+                
+                map[r][c].t = TT::ENE;        
+                elist.push_back(mkEnemy(false)); 
+                break;
+                
+            }
+        }
     }
-    if((pl.floor % 3 == 0 || pl.floor >= 9) && fi < (int)floors.size()) {
-        elist.push_back(mkEnemy(true));
-        map[floors[fi].first][floors[fi].second].t = TT::BOSS;
-        map[floors[fi].first][floors[fi].second].ei = (int)elist.size() - 1;
-    }
+    // ---------------------------------------------------------
 
     revealAll();
     updateVis();
