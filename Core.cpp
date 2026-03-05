@@ -5,6 +5,7 @@ Game::Game() : win(sf::VideoMode({W,H}), "DUNGEON OF FATE", sf::Style::Titlebar|
                sprPlayer(texPlayer), sprWall(texWall), sprFloor(texFloor), 
                sprEne(texEne), sprBoss(texBoss), sprItem(texItem), sprStair(texStair), 
                sprWar(texWar), sprMag(texMag), sprRog(texRog),
+               sprPlBatt(texPlBatt), sprEneBatt(texEneBatt), sprBossBatt(texBossBatt),
                gs(GS::INTRO), selClass(0), selAct(0), cur(0), at(0), shk(0), mt(0), it(0) {
     
     win.setFramerateLimit(60);
@@ -34,6 +35,11 @@ Game::Game() : win(sf::VideoMode({W,H}), "DUNGEON OF FATE", sf::Style::Titlebar|
     setupSprite(texWar, sprWar, "warrior.png", 80.0f);
     setupSprite(texMag, sprMag, "mage.png", 80.0f);
     setupSprite(texRog, sprRog, "rouge.png", 80.0f);
+
+    //ฉากต่อสู้ 
+    setupSprite(texPlBatt, sprPlBatt, "player_battle.png", 120.0f);
+    setupSprite(texEneBatt, sprEneBatt, "enemy.png", 120.0f);
+    setupSprite(texBossBatt, sprBossBatt, "boss.png", 120.0f);
 }
 
 void Game::run() {
@@ -100,14 +106,26 @@ void Game::handleKey(sf::Keyboard::Key k) {
                 gs = GS::MAP;
                 
                 if(pl.job == Job::WAR) {
+                    //ตัวละครผู้เล่นในแมพ
                     sprPlayer.setTexture(texWar, true);
                     sprPlayer.setScale({40.0f / texWar.getSize().x, 40.0f / texWar.getSize().y});
+                    //ตัวละครผู้เล่นตอนต่อสสู้
+                    sprPlBatt.setTexture(texWar, true);
+                    sprPlBatt.setScale({120.0f / texWar.getSize().x, 120.0f / texWar.getSize().y});
                 } else if(pl.job == Job::MAG) {
+                    //
                     sprPlayer.setTexture(texMag, true);
                     sprPlayer.setScale({40.0f / texMag.getSize().x, 40.0f / texMag.getSize().y});
+                    //
+                    sprPlBatt.setTexture(texMag, true);
+                    sprPlBatt.setScale({120.0f / texMag.getSize().x, 120.0f / texMag.getSize().y});
                 } else if(pl.job == Job::ROG) {
+                    //
                     sprPlayer.setTexture(texRog, true);
                     sprPlayer.setScale({40.0f / texRog.getSize().x, 40.0f / texRog.getSize().y});
+                    //
+                    sprPlBatt.setTexture(texRog, true);
+                    sprPlBatt.setScale({120.0f / texRog.getSize().x, 120.0f / texRog.getSize().y});
                 }
             }
             break;

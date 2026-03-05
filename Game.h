@@ -17,6 +17,9 @@ private:
     //กราฟฟิกแผนที่,สิ่งของ
     sf::Texture texFloor, texWall, texStair, texEne, texBoss, texItem;
     sf::Sprite sprFloor, sprWall, sprStair, sprEne, sprBoss, sprItem;
+    //กราฟฟิกหน้าตต่อสู้
+    sf::Texture texPlBatt, texEneBatt, texBossBatt;
+    sf::Sprite sprPlBatt, sprEneBatt, sprBossBatt;
 
     //กราฟฟิกหน้าเลือกอาชีพ
     sf::Texture texWar, texMag, texRog;

@@ -201,7 +201,6 @@ void Game::dMap(float sx, float sy) {
     float pp = OX + sx + pl.x * TS;
     float py2 = OY + sy + pl.y * TS;
     float bob = std::sin(at*4)*2.f;
-    
     sprPlayer.setPosition({pp + 4.f, py2 + 4.f + bob});
     win.draw(sprPlayer);
 
@@ -250,8 +249,19 @@ void Game::dMap(float sx, float sy) {
 void Game::dBattle(float sx, float sy) {
     dr(0, 0, (float)W, 65, sf::Color(12,8,25));
     dt_("BATTLE!", 30, batt.boss ? C_BOSS : C_ENE, 20, 15);
-    dr(540 + sx, 85 + sy, 100, 100, batt.col);
-    dr(110 + sx, 130 + sy, 80, 80, C_PC);
+    //Enemy
+    if(batt.boss){
+        sprBossBatt.setPosition({540.f + sx, 85.f + sy});
+        win.draw(sprBossBatt);
+    }else{
+        sprEneBatt.setPosition({540.f + sx, 85.f + sy});
+        win.draw(sprEneBatt);
+    }
+    //player
+    sprPlBatt.setPosition({110.f + sx, 130.f + sy});
+    win.draw(sprPlBatt);
+
+
     dr(20, 480, (float)(W - 40), 108, C_UI);
     if(bs == BS::PTURN) {
         dt_("[1] Attack  [2] Skill  [3] Item  [4] Run (Use arrows to select)", 18, C_HI, 40, 500);
