@@ -52,11 +52,12 @@ void Game::run() {
 
 void Game::loadFont() {
     const char* p[] = {
+        "pixel.ttf", //font ใหม่ที่เพิ่มเข้ามา ถ้าอยากเปลี่ยนก็เอามาเปลี่ยนได้เลยนะ 
         "/opt/homebrew/share/fonts/dejavu-fonts/DejaVuSans.ttf",
         "/System/Library/Fonts/Supplemental/Arial.ttf",
         "/System/Library/Fonts/Helvetica.ttc",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "arial.ttf", nullptr
+        nullptr
     };
     for(int i=0; p[i]; i++) if(fnt.openFromFile(p[i])) return;
     std::cerr << "Font not found!\n";
