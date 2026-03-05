@@ -166,8 +166,7 @@ void Game::dMap(float sx, float sy) {
             if(!t.vis) { dr(tx, ty, TS-1, TS-1, sf::Color(5,5,10)); continue; }
 
             // --- 1. วาดพื้นห้อง ---
-            dr(tx, ty, TS-1, TS-1, sf::Color(30, 25, 50)); 
-
+            dr(tx, ty, TS-1, TS-1, sf::Color(30, 25, 50));
             // --- 2. วาดสิ่งต่างๆ ทับบนพื้น ---
             if(t.t == TT::WALL) {
                 // กำแพง
@@ -233,10 +232,34 @@ void Game::dMap(float sx, float sy) {
     for(auto& p : pl.inv) { dt_("- " + p.name, 11, sf::Color(200,200,200), ux+10, y); y+=14; }
     
     dt_("LEGEND:", 11, sf::Color(150,150,150), ux+10, y); y+=16;
-    dr(ux+10, y+2, 8, 8, C_ENE); dt_("Enemy", 11, C_TXT, ux+22, y); y+=14;
-    dr(ux+10, y+2, 8, 8, C_BOSS); dt_("Boss", 11, C_TXT, ux+22, y); y+=14;
-    dr(ux+10, y+2, 8, 8, C_GOLD); dt_("Item", 11, C_TXT, ux+22, y); y+=14;
-    dr(ux+10, y+2, 8, 8, C_STAIR); dt_("Stairs", 11, C_TXT, ux+22, y); y+=14;
+
+    sf::Vector2f sEne = sprEne.getScale(); 
+    sprEne.setScale({12.0f / texEne.getSize().x, 12.0f / texEne.getSize().y}); 
+    sprEne.setPosition({ux + 10.f, y + 1.f});
+    win.draw(sprEne);
+    sprEne.setScale(sEne); 
+    dt_("Enemy", 11, C_TXT, ux + 26.f, y); y += 14;
+
+    sf::Vector2f sBoss = sprBoss.getScale(); 
+    sprBoss.setScale({12.0f / texBoss.getSize().x, 12.0f / texBoss.getSize().y});
+    sprBoss.setPosition({ux + 10.f, y + 1.f});
+    win.draw(sprBoss);
+    sprBoss.setScale(sBoss);
+    dt_("Boss", 11, C_TXT, ux + 26.f, y); y += 14;
+
+    sf::Vector2f sItem = sprItem.getScale();
+    sprItem.setScale({12.0f / texItem.getSize().x, 12.0f / texItem.getSize().y});
+    sprItem.setPosition({ux + 10.f, y + 1.f});
+    win.draw(sprItem);
+    sprItem.setScale(sItem);
+    dt_("Item", 11, C_TXT, ux + 26.f, y); y += 14;
+
+    sf::Vector2f sStair = sprStair.getScale();
+    sprStair.setScale({12.0f / texStair.getSize().x, 12.0f / texStair.getSize().y});
+    sprStair.setPosition({ux + 10.f, y + 1.f});
+    win.draw(sprStair);
+    sprStair.setScale(sStair);
+    dt_("Stairs", 11, C_TXT, ux + 26.f, y); y += 14;
     
     // 4. ข้อความ Log ด้านล่างซ้าย
     float cy = OY + sy + (ROWS * TS) + 10.f;
