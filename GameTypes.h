@@ -15,9 +15,9 @@ extern const sf::Color C_ITEM, C_STAIR, C_UI, C_HP, C_HPL, C_EXP;
 extern const sf::Color C_TXT, C_GOLD, C_HI;
 
 // ── Enums ──────────────────────────────────────────────────
-enum class GS { INTRO, NAME, AGE, CLASS, MAP, BATTLE, EVENT, DEAD, WIN };
+enum class GS { INTRO, NAME, AGE, CLASS, MAP, BATTLE, EVENT, SHOP, DEAD, WIN };
 enum class Job { WAR, MAG, ROG, NONE };
-enum class TT { FLOOR, WALL, STAIR, ITEM, ENE, BOSS };
+enum class TT { FLOOR, WALL, STAIR, ITEM, ENE, BOSS, SHOP };
 enum class BS { PTURN, RESULT };
 
 // ── Structs ────────────────────────────────────────────────
