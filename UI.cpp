@@ -106,6 +106,7 @@ void Game::dIntro() {
       W / 2.0f, 420);
   dt_("WASD/Arrows=Move  ENTER=Confirm  Arrows=Select  N=Next Floor", 13,
       sf::Color(255, 255, 255), 400, 560);
+  dtc("ESC = Exit Game", 14, sf::Color(220, 220, 220), W / 2.0f, 590);
 }
 
 void Game::dInput(const std::string &prompt, bool isAge) {
