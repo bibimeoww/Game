@@ -7,7 +7,10 @@ Game::Game()
       sprPlayer(texPlayer), sprWall(texWall), sprFloor(texFloor),
       sprEne(texEne), sprBoss(texBoss), sprItem(texItem), sprGate(texGate),
       sprMerchant(texMerchant),
-      sprWar(texWar), sprMag(texMag), sprRog(texRog), sprPlBatt(texPlBatt),
+      sprWar(texWar), sprMag(texMag), sprRog(texRog),
+      sprPotionShop(texPotionShop), sprSwordShop(texSwordShop),
+      sprCoinShop(texCoinShop),
+      sprPlBatt(texPlBatt),
       sprEneBatt(texEneBatt), sprBossBatt(texBossBatt), sprBg(texBg),
       sprAtk(texAtk), sprSkill(texSkill), gs(GS::INTRO), selClass(0), selAct(0),
       cur(0), at(0), shk(0), mt(0), it(0) {
@@ -18,7 +21,11 @@ Game::Game()
   // ฟังก์ชันตัวช่วยโหลดรูปและปรับขนาด
   auto setupSprite = [](sf::Texture &tex, sf::Sprite &spr,
                         const std::string &file, float targetSize) {
-    if (tex.loadFromFile(file)) {
+    bool loaded = tex.loadFromFile(file);
+    if (!loaded) {
+      loaded = tex.loadFromFile("character images/" + file);
+    }
+    if (loaded) {
       tex.setSmooth(false);
       spr.setTexture(tex, true);
       spr.setScale(
@@ -36,12 +43,18 @@ Game::Game()
   setupSprite(texBoss, sprBoss, "boss.png", 48.0f);
   setupSprite(texItem, sprItem, "item.png", 32.0f);
   setupSprite(texGate, sprGate, "gate.png", 40.0f);
+  if (texGate.getSize().x == 0 || texGate.getSize().y == 0) {
+    setupSprite(texGate, sprGate, "stair.png", 40.0f);
+  }
   setupSprite(texMerchant, sprMerchant, "merchant.png", 48.0f);
 
   // โหลดรูป 3 อาชีพหน้าเลือกตัวละคร
   setupSprite(texWar, sprWar, "warrior.png", 80.0f);
   setupSprite(texMag, sprMag, "mage.png", 80.0f);
   setupSprite(texRog, sprRog, "rouge.png", 80.0f);
+  setupSprite(texPotionShop, sprPotionShop, "potion.png", 28.0f);
+  setupSprite(texSwordShop, sprSwordShop, "sword.png", 28.0f);
+  setupSprite(texCoinShop, sprCoinShop, "coin.png", 28.0f);
 
   // ฉากต่อสู้
   setupSprite(texPlBatt, sprPlBatt, "player_battle.png", 120.0f);
@@ -49,17 +62,19 @@ Game::Game()
   setupSprite(texBossBatt, sprBossBatt, "boss.png", 120.0f);
 
   // กราฟฟิกพื้นหลัง
-  if (texBg.loadFromFile("background.png")) {
+  if (texBg.loadFromFile("background.png") ||
+      texBg.loadFromFile("character images/background.png")) {
     texBg.setSmooth(true);
     sprBg.setTexture(texBg, true);
     sprBg.setScale(
         {(float)W / texBg.getSize().x, (float)H / texBg.getSize().y});
   } else {
-    printf("WARNING: Image character images/background.png not found!\n");
+    printf("WARNING: Image background.png not found!\n");
   }
 
   // เอฟเฟกต์โจมตี
-  if (texAtk.loadFromFile("attack.png")) {
+  if (texAtk.loadFromFile("attack.png") ||
+      texAtk.loadFromFile("character images/attack.png")) {
     texAtk.setSmooth(true);
     sprAtk.setTexture(texAtk, true);
     // ปรับขนาดให้เหมาะสมกับศัตรูในฉากต่อสู้
@@ -69,7 +84,8 @@ Game::Game()
   }
 
   // เอฟเฟกต์สกิล
-  if (texSkill.loadFromFile("skill.png")) {
+  if (texSkill.loadFromFile("skill.png") ||
+      texSkill.loadFromFile("character images/skill.png")) {
     texSkill.setSmooth(true);
     sprSkill.setTexture(texSkill, true);
     // ปรับขนาดให้เหมาะสม
@@ -99,7 +115,7 @@ void Game::loadFont() {
       "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
       nullptr};
   for (int i = 0; p[i]; i++)
-    if (fnt.openFromFile(p[i]))
+    if (fnt.loadFromFile(p[i]))
       return;
   std::cerr << "Font not found!\n";
 }
@@ -111,24 +127,20 @@ void Game::addLog(const std::string &s) {
 }
 
 void Game::events() {
-    while (const std::optional<sf::Event> event = win.pollEvent()) {
-        if (event->is<sf::Event::Closed>()) {
-            win.close();
-        }
-        else if (const auto* keyEvent = event->getIf<sf::Event::KeyPressed>()) {
-            handleKey(keyEvent->code);
-        }
-        else if (const auto* textEvent = event->getIf<sf::Event::TextEntered>()) {
-            char c = static_cast<char>(textEvent->unicode);
-            
-            if (gs == GS::NAME || gs == GS::AGE) {
-                
-                if (c >= 32 && c < 127 && inp.length() < 12) {
-                    inp += c; 
-                }
-            }
-        }
+  sf::Event event;
+  while (win.pollEvent(event)) {
+    if (event.type == sf::Event::Closed) {
+      win.close();
+    } else if (event.type == sf::Event::KeyPressed) {
+      handleKey(event.key.code);
+    } else if (event.type == sf::Event::TextEntered) {
+      char c = static_cast<char>(event.text.unicode);
+      if ((gs == GS::NAME || gs == GS::AGE) && c >= 32 && c < 127 &&
+          inp.length() < 12) {
+        inp += c;
+      }
     }
+  }
 }
 
 void Game::handleKey(sf::Keyboard::Key k) {
@@ -326,5 +338,3 @@ void Game::openShop(){
     shopSel = 0;
     gs = GS::SHOP;
 }
-
-
