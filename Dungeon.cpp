@@ -1,9 +1,6 @@
 #include "Game.h"
 #include <algorithm>
 
-#include "Game.h"
-#include <algorithm>
-
 void Game::genMap() {
     map.assign(ROWS, std::vector<Tile>(COLS));
     const int GC = 3, GR = 3; 
@@ -24,7 +21,7 @@ void Game::genMap() {
         for(int r = r1; r <= r2; r++) for(int c = c1; c <= c2; c++) map[r][c].t = TT::FLOOR;
     }
 
-    // --- สร้างทางเดิน L-Shape ---
+    // --- แก้บัคด้วยระบบสร้างทางเดิน L-Shape ---
     auto carveCorridor = [&](int r1, int c1, int r2, int c2) {
         int sc = std::min(c1, c2), ec = std::max(c1, c2);
         for (int c = sc; c <= ec; c++) map[r1][c].t = TT::FLOOR;
@@ -38,6 +35,7 @@ void Game::genMap() {
     for(int gc=0; gc<GC; gc++) for(int gr=0; gr<GR-1; gr++) {
         carveCorridor(rooms[gr*GC+gc].cr(), rooms[gr*GC+gc].cc(), rooms[(gr+1)*GC+gc].cr(), rooms[(gr+1)*GC+gc].cc());
     }
+    // ----------------------------------------
 
     pl.x = rooms[0].cc(); pl.y = rooms[0].cr();
     map[pl.y][pl.x].t = TT::FLOOR;
@@ -54,43 +52,65 @@ void Game::genMap() {
     elist.clear(); 
     int numEnemies = 6;
     bool bossFloor = (pl.floor % 3 == 0);
-    
-    // --- Spawn Enemy ---
+    // spawn enemy
     for (int i = 0; i < numEnemies; i++) {
         while (true) {
+
             int r = rand() % ROWS;
             int c = rand() % COLS;
 
-            if (map[r][c].t == TT::FLOOR && (r != pl.y || c != pl.x)) {
-                // ตัวแรกเป็น Boss (ถ้าถึงชั้นบอส)
-                if (bossFloor && i == 0) {
-                    map[r][c].t = TT::BOSS;
-                    elist.push_back(mkEnemy(true));
+           if (map[r][c].t == TT::FLOOR && (r != pl.y || c != pl.x)) {
+
+            // ตัวแรกเป็น Boss
+            if (bossFloor && i == 0) {
+                map[r][c].t = TT::BOSS;
+                elist.push_back(mkEnemy(true));
+            }
+            else {
+                map[r][c].t = TT::ENE;
+                elist.push_back(mkEnemy(false));
+            }
+
+            break;
+        }
+    }
+}
+
+if(pl.floor % 3 == 0){
+    addLog("A powerful Boss lurks on this floor...");
+}
+revealAll();
+updateVis();
+
+    // spawn shop on a valid floor tile only (never overlap stairs/gate)
+    bool placedShop = false;
+    for (int tries = 0; tries < 30; tries++) {
+        int roomIdx = rnd(0, 8);
+        int shopR = rooms[roomIdx].cr();
+        int shopC = rooms[roomIdx].cc();
+        if (map[shopR][shopC].t == TT::FLOOR && !(shopR == pl.y && shopC == pl.x)) {
+            map[shopR][shopC].t = TT::SHOP;
+            placedShop = true;
+            break;
+        }
+    }
+    if (!placedShop) {
+        for (int r = 0; r < ROWS && !placedShop; r++) {
+            for (int c = 0; c < COLS; c++) {
+                if (map[r][c].t == TT::FLOOR && !(r == pl.y && c == pl.x)) {
+                    map[r][c].t = TT::SHOP;
+                    placedShop = true;
+                    break;
                 }
-                else {
-                    map[r][c].t = TT::ENE;
-                    elist.push_back(mkEnemy(false));
-                }
-                break;
             }
         }
     }
 
-    if(bossFloor){
-        addLog("A powerful Boss lurks on this floor...");
-    }
+// ---------------------------------------------------------
 
-    // --- Spawn Shop (สุ่มพ่อค้า) ---
-    int shopRoom = rnd(1, 7);
-    int shopR = rooms[shopRoom].cr();
-    int shopC = rooms[shopRoom].cc();
-    map[shopR][shopC].t = TT::SHOP;
-
-    // เคลียร์หมอกและอัปเดตระยะการมองเห็นตอนเริ่มด่าน
-    revealAll();
-    updateVis();
+revealAll();
+updateVis();
 }
-
 void Game::revealAll() {
     for(int r=0; r<ROWS; r++) for(int c=0; c<COLS; c++) map[r][c].vis = true;
 }
@@ -116,25 +136,13 @@ void Game::descend() {
 }
 
 Enemy Game::mkEnemy(bool boss) {
-    Enemy e; 
-    int f = pl.floor; //f = dungeon ยิ่งลึกยิ่งยาก
+    Enemy e; int f = pl.floor;
     if(boss) {
-        e.name = "Boss";
-        // MaxHP, HP, ATK, DEF, SPD
-        // f*60 HP , ATK f*10 
-        e.s = {100 + f * 60, 100 + f * 60, 20 + f * 10, 10 + f * 5, 6 + f * 2};
-        e.exp = 150 + f * 80; 
-        e.gold = 80 + f * 40; 
-        e.boss = true; 
-        e.col = C_BOSS;
+        e.name = "Boss"; e.s = {100+f*40, 100+f*40, 20+f*6, 10+f*3, 6+f*2};
+        e.exp = 150+f*80; e.gold = 80+f*40; e.boss = true; e.col = C_BOSS;
     } else {
-        e.name = "Monster"; 
-        //เพิ่มชั้นละ 20 HP , ATK 5 
-        e.s = {20 + f * 20, 20 + f * 20, 8 + f * 5, 4 + f * 3, 4 + f * 1};
-        e.exp = 20 + f * 10;
-        e.gold = 5 + f *3;
-        e.boss = false;
-        e.col = C_ENE;
+        e.name = "Monster"; e.s = {20+f*12, 20+f*12, 8+f*3, 4+f*2, 4+f};
+        e.exp = 20+f*10; e.gold = 5+f*3; e.boss = false; e.col = C_ENE;
     }
     return e;
 }
