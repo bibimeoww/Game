@@ -2,7 +2,6 @@
 #include "GameTypes.h"
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
-#include <unordered_map>
 
 class Game {
 public:
@@ -61,7 +60,6 @@ private:
   int enemyRampTurn = 0;
   std::string res, evtMsg;
   std::vector<std::string> log;
-  std::unordered_map<std::string, int> playerAges;
 
   // --- Core (คนที่ 1) ---
   void events();
@@ -71,8 +69,6 @@ private:
   void loadFont();
   void addLog(const std::string &s);
   void openShop();
-  void loadPlayerProfiles();
-  void savePlayerProfile(const std::string &name, int age);
 
   // --- Battle (คนที่ 2) ---
   void initPlayer();
