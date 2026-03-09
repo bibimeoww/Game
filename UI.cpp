@@ -1,19 +1,22 @@
 #include "Game.h"
 #include <cmath>
 
-void Game::dt_(const std::string &s, unsigned sz, sf::Color c, float x, float y) {
-    sf::Text t(s, fnt, sz); 
-    t.setFillColor(c);
-    t.setPosition(x, y); 
-    win.draw(t);
+void Game::dt_(const std::string &s, unsigned sz, sf::Color c, float x,
+               float y) {
+  sf::Text t(s, fnt, sz);
+  t.setFillColor(c);
+  t.setPosition(x, y);
+  win.draw(t);
 }
 
-void Game::dtc(const std::string &s, unsigned sz, sf::Color c, float cx, float y) {
-    sf::Text t(s, fnt, sz); 
-    t.setFillColor(c);
-    t.setPosition(cx - t.getGlobalBounds().width / 2.f, y); 
-    win.draw(t);
+void Game::dtc(const std::string &s, unsigned sz, sf::Color c, float cx,
+               float y) {
+  sf::Text t(s, fnt, sz);
+  t.setFillColor(c);
+  t.setPosition(cx - t.getGlobalBounds().width / 2.f, y);
+  win.draw(t);
 }
+
 void Game::dr(float x, float y, float w, float h, sf::Color c, bool ol,
               sf::Color oc) {
   sf::RectangleShape r({w, h});
@@ -78,7 +81,7 @@ void Game::draw() {
 }
 
 void Game::dIntro() {
-  win.draw(sprBg); // วาดภาพพื้นหลัง
+  win.draw(sprBg); // draw intro background
 
   for (int i = 0; i < 50; i++) {
     float px = (float)((i * 137 + (int)(at * 20)) % W);
@@ -225,24 +228,31 @@ void Game::dMap(float sx, float sy) {
 
       // --- 1. วาดพื้นห้อง ---
       dr(tx, ty, TS - 1, TS - 1, sf::Color(30, 25, 50));
-      
       // --- 2. วาดสิ่งต่างๆ ทับบนพื้น ---
       if (t.t == TT::WALL) {
         // กำแพง
         dr(tx, ty, TS - 1, TS - 1, sf::Color(65, 55, 100));
-      } else if (t.t == TT::STAIR) { 
-        // เปลี่ยนพิกัดเป็น tx, ty ให้ตรงกับของในลูป
-        sprStair.setPosition({tx + 4.f, ty + 4.f}); 
-        win.draw(sprStair); 
-      } else if (t.t == TT::ITEM) { // <--- ลบปีกกาที่เกินมาตรงนี้ออกให้แล้วครับ
+      } else if (t.t == TT::STAIR) {
+        // Draw gate sprite for stairs instead of green placeholder box.
+        sf::Vector2f sGateTile = sprGate.getScale();
+        if (texGate.getSize().x > 0 && texGate.getSize().y > 0) {
+          sprGate.setScale({40.0f / texGate.getSize().x, 40.0f / texGate.getSize().y});
+          sprGate.setPosition({tx + 4.f, ty + 4.f});
+          win.draw(sprGate);
+          sprGate.setScale(sGateTile);
+        } else {
+          dr(tx + 8.f, ty + 8.f, TS - 16.f, TS - 16.f, C_STAIR);
+        }
+      } else if (t.t == TT::ITEM) {
         // ไอเทม (กล่องสีทอง ลอยขึ้นลงได้)
         float bob = std::sin(at * 3 + r) * 3.f;
         dr(tx + 12.f, ty + 12.f + bob, TS - 24.f, TS - 24.f, C_GOLD);
-      } else if (t.t == TT::SHOP) {
+      }else if (t.t == TT::SHOP) {
         // ร้านค้า
         float bob = std::sin(at * 3.5f + r + c) * 2.f;
         sprMerchant.setPosition({tx + 4.f, ty + 4.f + bob});
         win.draw(sprMerchant);
+        
       } else if (t.t == TT::ENE) {
         // ศัตรู
         float bob = std::sin(at * 4 + c) * 2.f;
@@ -339,12 +349,12 @@ void Game::dMap(float sx, float sy) {
   dt_("Item", 11, C_TXT, ux + 26.f, y);
   y += 14;
 
-  sf::Vector2f sStair = sprStair.getScale();
-  sprStair.setScale({12.0f / texStair.getSize().x, 12.0f / texStair.getSize().y});
-  sprStair.setPosition({ux + 10.f, y + 1.f});
-  win.draw(sprStair);
-  sprStair.setScale(sStair);
-  dt_("Stairs", 11, C_TXT, ux + 26.f, y); 
+  sf::Vector2f sGate = sprGate.getScale();
+  sprGate.setScale({12.0f / texGate.getSize().x, 12.0f / texGate.getSize().y});
+  sprGate.setPosition({ux + 10.f, y + 1.f});
+  win.draw(sprGate);
+  sprGate.setScale(sGate);
+  dt_("Stairs", 11, C_TXT, ux + 26.f, y);
   y += 14;
 
   // 4. ข้อความ Log ด้านล่างซ้าย
@@ -435,6 +445,7 @@ void Game::dEnd(bool isWin) {
 
 void Game::dShop(){
 
+    // กล่องร้านค้า
     dr(200,150,780,420,C_UI);
     dr(200,150,780,420,sf::Color::Transparent,true,sf::Color(120,80,200));
 
@@ -479,20 +490,22 @@ void Game::dShop(){
     sf::Text goldLabel(goldText, fnt, 20);
     goldLabel.setFillColor(C_GOLD);
     sf::FloatRect gb = goldLabel.getLocalBounds();
-    float goldIconSize = 30.f;
-    float goldGap = 10.f;
+    float goldIconSize = 54.f;
+    float goldGap = 16.f;
     bool hasGoldIcon = (texCoinShop.getSize().x > 0 && texCoinShop.getSize().y > 0);
     float goldGroupWidth = gb.width + (hasGoldIcon ? (goldIconSize + goldGap) : 0.f);
-    float goldLeft = (W - goldGroupWidth) / 2.f;
+    float goldLeft = (W - goldGroupWidth) / 2.f - 22.f;
     if (hasGoldIcon) {
         sf::Vector2f old = sprCoinShop.getScale();
         sprCoinShop.setScale({goldIconSize / texCoinShop.getSize().x, goldIconSize / texCoinShop.getSize().y});
-        sprCoinShop.setPosition({goldLeft, 495.f});
+        sprCoinShop.setPosition({goldLeft, 486.f});
         win.draw(sprCoinShop);
         sprCoinShop.setScale(old);
     }
     goldLabel.setPosition({goldLeft + (hasGoldIcon ? (goldIconSize + goldGap) : 0.f) - gb.left, 500.f});
     win.draw(goldLabel);
+
     dtc("UP/DOWN = Select   ENTER = Buy",16,C_TXT,W/2,440);
 }
+
 
