@@ -78,6 +78,7 @@ int Game::dmg(int a, int d, float m) {
 void Game::startBattle(Enemy e) {
   batt = e;
   bs = BS::PTURN;
+  enemyRampTurn = 0;
   log.clear();
   addLog("Battle! " + e.name + " appeared!");
   selAct = 0;
@@ -167,11 +168,21 @@ void Game::doPlayerAction(int a) {
 void Game::enemyTurn() {
   if (batt.s.hp <= 0)
     return;
+
+  // Normal enemies scale up a bit every turn, capped so they stay below boss pressure.
+  float ramp = 1.0f;
+  if (!batt.boss) {
+    ramp += std::min(0.18f, enemyRampTurn * 0.03f); // +3%/turn, max +18%
+  }
+
   bool sp = batt.boss && rnd(1, 100) <= 30;
-  int d = sp ? dmg(batt.s.atk, pl.s.def, 1.8f) : dmg(batt.s.atk, pl.s.def);
+  int d = sp ? dmg(batt.s.atk, pl.s.def, 1.8f)
+             : dmg(batt.s.atk, pl.s.def, ramp);
   addLog(batt.name + (sp ? " Special! " : " attacks! ") + ts(d) + " dmg!");
+  if (!batt.boss)
+    enemyRampTurn++;
+
   pl.s.hp -= d;
   shk = 0.3f;
   battleEnd();
 }
-
