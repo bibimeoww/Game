@@ -2,16 +2,16 @@
 #include <cmath>
 
 void Game::dt_(const std::string &s, unsigned sz, sf::Color c, float x, float y) {
-    sf::Text t(fnt, s, sz); 
+    sf::Text t(s, fnt, sz); 
     t.setFillColor(c);
-    t.setPosition({x, y}); 
+    t.setPosition(x, y); 
     win.draw(t);
 }
 
 void Game::dtc(const std::string &s, unsigned sz, sf::Color c, float cx, float y) {
-    sf::Text t(fnt, s, sz); 
+    sf::Text t(s, fnt, sz); 
     t.setFillColor(c);
-    t.setPosition({cx - t.getGlobalBounds().size.x / 2.f, y}); 
+    t.setPosition(cx - t.getGlobalBounds().width / 2.f, y); 
     win.draw(t);
 }
 void Game::dr(float x, float y, float w, float h, sf::Color c, bool ol,
@@ -232,8 +232,8 @@ void Game::dMap(float sx, float sy) {
         dr(tx, ty, TS - 1, TS - 1, sf::Color(65, 55, 100));
       } else if (t.t == TT::STAIR) { 
         // เปลี่ยนพิกัดเป็น tx, ty ให้ตรงกับของในลูป
-        sprGate.setPosition({tx + 4.f, ty + 4.f}); 
-        win.draw(sprGate); 
+        sprStair.setPosition({tx + 4.f, ty + 4.f}); 
+        win.draw(sprStair); 
       } else if (t.t == TT::ITEM) { // <--- ลบปีกกาที่เกินมาตรงนี้ออกให้แล้วครับ
         // ไอเทม (กล่องสีทอง ลอยขึ้นลงได้)
         float bob = std::sin(at * 3 + r) * 3.f;
@@ -339,12 +339,12 @@ void Game::dMap(float sx, float sy) {
   dt_("Item", 11, C_TXT, ux + 26.f, y);
   y += 14;
 
-  sf::Vector2f sGate = sprGate.getScale();
-  sprGate.setScale({12.0f / texGate.getSize().x, 12.0f / texGate.getSize().y});
-  sprGate.setPosition({ux + 10.f, y + 1.f});
-  win.draw(sprGate);
-  sprGate.setScale(sGate);
-  dt_("Gate", 11, C_TXT, ux + 26.f, y); 
+  sf::Vector2f sStair = sprStair.getScale();
+  sprStair.setScale({12.0f / texStair.getSize().x, 12.0f / texStair.getSize().y});
+  sprStair.setPosition({ux + 10.f, y + 1.f});
+  win.draw(sprStair);
+  sprStair.setScale(sStair);
+  dt_("Stairs", 11, C_TXT, ux + 26.f, y); 
   y += 14;
 
   // 4. ข้อความ Log ด้านล่างซ้าย
@@ -426,12 +426,15 @@ void Game::dEvent() {
 
 void Game::dEnd(bool isWin) {
   isWin ? win.clear(sf::Color(20, 50, 20)) : win.clear(sf::Color(50, 20, 20));
-  dtc(isWin ? "VICTORY!" : "GAME OVER", 56, isWin ? C_GOLD : C_HPL, 512, 120);
+  sf::Text t(isWin ? "VICTORY!" : "GAME OVER", fnt, 56);
+  t.setFillColor(isWin ? C_GOLD : C_HPL);
+  sf::FloatRect b = t.getLocalBounds();
+  t.setPosition((W - b.width) / 2.f - b.left, (H - b.height) / 2.f - b.top);
+  win.draw(t);
 }
 
 void Game::dShop(){
 
-    // กล่องร้านค้า
     dr(200,150,780,420,C_UI);
     dr(200,150,780,420,sf::Color::Transparent,true,sf::Color(120,80,200));
 
@@ -444,15 +447,52 @@ void Game::dShop(){
     };
 
     for(int i=0;i<3;i++){
-
+        float itemY = 260.f + i * 60.f;
         sf::Color c = (shopSel==i)?C_HI:C_TXT;
+        sf::Text label(items[i], fnt, 24);
+        label.setFillColor(c);
+        sf::FloatRect lb = label.getLocalBounds();
+        float iconSize = 54.f;
+        float iconGap = 16.f;
+        float textX = (W / 2.f) - (lb.width / 2.f) - lb.left;
+        float iconX = textX - iconSize - iconGap;
 
-        dtc(items[i],24,c,W/2,260 + i*60);
+        if(i == 0 && texPotionShop.getSize().x > 0 && texPotionShop.getSize().y > 0){
+            sf::Vector2f old = sprPotionShop.getScale();
+            sprPotionShop.setScale({iconSize / texPotionShop.getSize().x, iconSize / texPotionShop.getSize().y});
+            sprPotionShop.setPosition({iconX, itemY - 10.f});
+            win.draw(sprPotionShop);
+            sprPotionShop.setScale(old);
+        } else if(i == 1 && texSwordShop.getSize().x > 0 && texSwordShop.getSize().y > 0){
+            sf::Vector2f old = sprSwordShop.getScale();
+            sprSwordShop.setScale({iconSize / texSwordShop.getSize().x, iconSize / texSwordShop.getSize().y});
+            sprSwordShop.setPosition({iconX, itemY - 10.f});
+            win.draw(sprSwordShop);
+            sprSwordShop.setScale(old);
+        }
+
+        label.setPosition({textX, itemY});
+        win.draw(label);
     }
 
-    dtc("Gold: "+ts(pl.gold),20,C_GOLD,W/2,500);
+    std::string goldText = "Gold: " + ts(pl.gold);
+    sf::Text goldLabel(goldText, fnt, 20);
+    goldLabel.setFillColor(C_GOLD);
+    sf::FloatRect gb = goldLabel.getLocalBounds();
+    float goldIconSize = 30.f;
+    float goldGap = 10.f;
+    bool hasGoldIcon = (texCoinShop.getSize().x > 0 && texCoinShop.getSize().y > 0);
+    float goldGroupWidth = gb.width + (hasGoldIcon ? (goldIconSize + goldGap) : 0.f);
+    float goldLeft = (W - goldGroupWidth) / 2.f;
+    if (hasGoldIcon) {
+        sf::Vector2f old = sprCoinShop.getScale();
+        sprCoinShop.setScale({goldIconSize / texCoinShop.getSize().x, goldIconSize / texCoinShop.getSize().y});
+        sprCoinShop.setPosition({goldLeft, 495.f});
+        win.draw(sprCoinShop);
+        sprCoinShop.setScale(old);
+    }
+    goldLabel.setPosition({goldLeft + (hasGoldIcon ? (goldIconSize + goldGap) : 0.f) - gb.left, 500.f});
+    win.draw(goldLabel);
+    dtc("UP/DOWN = Select   ENTER = Buy",16,C_TXT,W/2,440);
+}
 
-    dtc("UP/DOWN = Select   ENTER = Buy",16,C_TXT,W/2,440);
-}
-    dtc("UP/DOWN = Select   ENTER = Buy",16,C_TXT,W/2,440);
-}
