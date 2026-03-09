@@ -2,6 +2,7 @@
 #include "GameTypes.h"
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
+#include <unordered_map>
 
 class Game {
 public:
@@ -34,6 +35,12 @@ private:
   sf::Texture texSkill;
   sf::Sprite sprSkill;
   float skillAnimTime = 0.0f;
+  sf::Texture texTrophy;
+  sf::Sprite sprTrophy;
+  float trophyOffsetX = 0.0f;
+  float trophyOffsetY = 0.0f;
+  float gameOverOffsetX = 0.0f;
+  float gameOverOffsetY = 0.0f;
 
   // กราฟฟิกหน้าเลือกอาชีพ
   sf::Texture texWar, texMag, texRog;
@@ -51,8 +58,10 @@ private:
   std::vector<Enemy> elist;
   Enemy batt{};
   BS bs = BS::PTURN;
+  int enemyRampTurn = 0;
   std::string res, evtMsg;
   std::vector<std::string> log;
+  std::unordered_map<std::string, int> playerAges;
 
   // --- Core (คนที่ 1) ---
   void events();
@@ -62,6 +71,8 @@ private:
   void loadFont();
   void addLog(const std::string &s);
   void openShop();
+  void loadPlayerProfiles();
+  void savePlayerProfile(const std::string &name, int age);
 
   // --- Battle (คนที่ 2) ---
   void initPlayer();
