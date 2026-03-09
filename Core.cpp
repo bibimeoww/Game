@@ -5,7 +5,8 @@ Game::Game()
     : win(sf::VideoMode({W, H}), "DUNGEON OF FATE",
           sf::Style::Titlebar | sf::Style::Close),
       sprPlayer(texPlayer), sprWall(texWall), sprFloor(texFloor),
-      sprEne(texEne), sprBoss(texBoss), sprItem(texItem), sprStair(texStair),
+      sprEne(texEne), sprBoss(texBoss), sprItem(texItem), sprGate(texGate),
+      sprMerchant(texMerchant),
       sprWar(texWar), sprMag(texMag), sprRog(texRog), sprPlBatt(texPlBatt),
       sprEneBatt(texEneBatt), sprBossBatt(texBossBatt), sprBg(texBg),
       sprAtk(texAtk), sprSkill(texSkill), gs(GS::INTRO), selClass(0), selAct(0),
@@ -34,7 +35,7 @@ Game::Game()
   setupSprite(texEne, sprEne, "enemy.png", 40.0f);
   setupSprite(texBoss, sprBoss, "boss.png", 48.0f);
   setupSprite(texItem, sprItem, "item.png", 32.0f);
-  setupSprite(texStair, sprStair, "stair.png", 40.0f);
+  setupSprite(texGate, sprGate, "gate.png", 40.0f);
   setupSprite(texMerchant, sprMerchant, "merchant.png", 48.0f);
 
   // โหลดรูป 3 อาชีพหน้าเลือกตัวละคร
@@ -48,7 +49,7 @@ Game::Game()
   setupSprite(texBossBatt, sprBossBatt, "boss.png", 120.0f);
 
   // กราฟฟิกพื้นหลัง
-  if (texBg.loadFromFile("character images/background.png")) {
+  if (texBg.loadFromFile("background.png")) {
     texBg.setSmooth(true);
     sprBg.setTexture(texBg, true);
     sprBg.setScale(
@@ -58,7 +59,7 @@ Game::Game()
   }
 
   // เอฟเฟกต์โจมตี
-  if (texAtk.loadFromFile("character images/attack.png")) {
+  if (texAtk.loadFromFile("attack.png")) {
     texAtk.setSmooth(true);
     sprAtk.setTexture(texAtk, true);
     // ปรับขนาดให้เหมาะสมกับศัตรูในฉากต่อสู้
@@ -68,7 +69,7 @@ Game::Game()
   }
 
   // เอฟเฟกต์สกิล
-  if (texSkill.loadFromFile("character images/skill.png")) {
+  if (texSkill.loadFromFile("skill.png")) {
     texSkill.setSmooth(true);
     sprSkill.setTexture(texSkill, true);
     // ปรับขนาดให้เหมาะสม
@@ -98,7 +99,7 @@ void Game::loadFont() {
       "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
       nullptr};
   for (int i = 0; p[i]; i++)
-    if (fnt.loadFromFile(p[i]))
+    if (fnt.openFromFile(p[i]))
       return;
   std::cerr << "Font not found!\n";
 }
@@ -110,25 +111,24 @@ void Game::addLog(const std::string &s) {
 }
 
 void Game::events() {
-  sf::Event event;
-  while (win.pollEvent(event)) {
-    if (event.type == sf::Event::Closed) {
-      win.close();
-      return;
-    }
-    if (event.type == sf::Event::KeyPressed)
-      handleKey(event.key.code);
-    if (event.type == sf::Event::TextEntered) {
-      if (gs == GS::NAME || gs == GS::AGE) {
-        char c = (char)event.text.unicode;
-        if (c >= 32 && c < 127 && inp.size() < 16) {
-          if (gs == GS::AGE && (c < '0' || c > '9'))
-            continue;
-          inp += c;
+    while (const std::optional<sf::Event> event = win.pollEvent()) {
+        if (event->is<sf::Event::Closed>()) {
+            win.close();
         }
-      }
+        else if (const auto* keyEvent = event->getIf<sf::Event::KeyPressed>()) {
+            handleKey(keyEvent->code);
+        }
+        else if (const auto* textEvent = event->getIf<sf::Event::TextEntered>()) {
+            char c = static_cast<char>(textEvent->unicode);
+            
+            if (gs == GS::NAME || gs == GS::AGE) {
+                
+                if (c >= 32 && c < 127 && inp.length() < 12) {
+                    inp += c; 
+                }
+            }
+        }
     }
-  }
 }
 
 void Game::handleKey(sf::Keyboard::Key k) {
@@ -326,4 +326,5 @@ void Game::openShop(){
     shopSel = 0;
     gs = GS::SHOP;
 }
+
 
