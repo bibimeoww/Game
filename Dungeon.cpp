@@ -51,29 +51,47 @@ void Game::genMap() {
     
     elist.clear(); 
     int numEnemies = 6;
-
+    bool bossFloor = (pl.floor % 3 == 0);
+    // spawn enemy
     for (int i = 0; i < numEnemies; i++) {
         while (true) {
-            // สุ่มพิกัด แถว (r) และ คอลัมน์ (c)
+
             int r = rand() % ROWS;
             int c = rand() % COLS;
-            
-            // กฎการเกิด: ต้องเป็นช่องว่าง (TT::FLOOR) และต้องไม่ทับจุดที่ผู้เล่นยืนอยู่
-            if (map[r][c].t == TT::FLOOR && (r != pl.y || c != pl.x)) {
-                
-                map[r][c].t = TT::ENE;        
-                elist.push_back(mkEnemy(false)); 
-                break;
-                
+
+           if (map[r][c].t == TT::FLOOR && (r != pl.y || c != pl.x)) {
+
+            // ตัวแรกเป็น Boss
+            if (bossFloor && i == 0) {
+                map[r][c].t = TT::BOSS;
+                elist.push_back(mkEnemy(true));
             }
+            else {
+                map[r][c].t = TT::ENE;
+                elist.push_back(mkEnemy(false));
+            }
+
+            break;
         }
     }
-    // ---------------------------------------------------------
-
-    revealAll();
-    updateVis();
 }
 
+if(pl.floor % 3 == 0){
+    addLog("A powerful Boss lurks on this floor...");
+}
+revealAll();
+updateVis();
+
+    // spawn shop
+    int shopR = rooms[rnd(0, 8)].cr();
+    int shopC = rooms[rnd(0, 8)].cc();
+    map[shopR][shopC].t = TT::SHOP;
+
+// ---------------------------------------------------------
+
+revealAll();
+updateVis();
+}
 void Game::revealAll() {
     for(int r=0; r<ROWS; r++) for(int c=0; c<COLS; c++) map[r][c].vis = true;
 }
