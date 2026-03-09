@@ -1,5 +1,24 @@
 #include "Game.h"
+#include <algorithm>
+#include <cctype>
+#include <fstream>
 #include <iostream>
+#include <sstream>
+
+namespace {
+std::string trimCopy(const std::string &s) {
+  const auto begin = std::find_if_not(s.begin(), s.end(), [](unsigned char ch) {
+    return std::isspace(ch);
+  });
+  const auto end = std::find_if_not(s.rbegin(), s.rend(), [](unsigned char ch) {
+    return std::isspace(ch);
+  }).base();
+
+  if (begin >= end)
+    return "";
+  return std::string(begin, end);
+}
+} // namespace
 
 Game::Game()
     : win(sf::VideoMode({W, H}), "DUNGEON OF FATE",
@@ -12,11 +31,13 @@ Game::Game()
       sprCoinShop(texCoinShop),
       sprPlBatt(texPlBatt),
       sprEneBatt(texEneBatt), sprBossBatt(texBossBatt), sprBg(texBg),
-      sprAtk(texAtk), sprSkill(texSkill), gs(GS::INTRO), selClass(0), selAct(0),
+      sprAtk(texAtk), sprSkill(texSkill), sprTrophy(texTrophy),
+      gs(GS::INTRO), selClass(0), selAct(0),
       cur(0), at(0), shk(0), mt(0), it(0) {
 
   win.setFramerateLimit(60);
   loadFont();
+  loadPlayerProfiles();
 
   // ฟังก์ชันตัวช่วยโหลดรูปและปรับขนาด
   auto setupSprite = [](sf::Texture &tex, sf::Sprite &spr,
@@ -94,6 +115,46 @@ Game::Game()
   } else {
     printf("WARNING: Image character images/skill.png not found!\n");
   }
+
+  setupSprite(texTrophy, sprTrophy, "trophy.png", 220.0f);
+}
+
+void Game::loadPlayerProfiles() {
+  playerAges.clear();
+  std::ifstream in("players.dat");
+  if (!in.is_open())
+    return;
+
+  std::string line;
+  while (std::getline(in, line)) {
+    if (line.empty())
+      continue;
+
+    std::istringstream ss(line);
+    int age = 0;
+    if (!(ss >> age))
+      continue;
+
+    std::string name;
+    std::getline(ss >> std::ws, name);
+    name = trimCopy(name);
+    if (name.empty())
+      continue;
+
+    playerAges[name] = age;
+  }
+}
+
+void Game::savePlayerProfile(const std::string &name, int age) {
+  playerAges[name] = age;
+
+  std::ofstream out("players.dat", std::ios::trunc);
+  if (!out.is_open())
+    return;
+
+  for (const auto &entry : playerAges) {
+    out << entry.second << " " << entry.first << "\n";
+  }
 }
 
 void Game::run() {
@@ -135,8 +196,10 @@ void Game::events() {
       handleKey(event.key.code);
     } else if (event.type == sf::Event::TextEntered) {
       char c = static_cast<char>(event.text.unicode);
-      if ((gs == GS::NAME || gs == GS::AGE) && c >= 32 && c < 127 &&
-          inp.length() < 12) {
+      if (gs == GS::NAME && c >= 32 && c < 127 && inp.length() < 12) {
+        inp += c;
+      } else if (gs == GS::AGE && std::isdigit(static_cast<unsigned char>(c)) &&
+                 inp.length() < 3) {
         inp += c;
       }
     }
@@ -152,15 +215,34 @@ void Game::handleKey(sf::Keyboard::Key k) {
     break;
   case GS::NAME:
     if (k == K::Enter && !inp.empty()) {
-      pl.name = inp;
+      std::string enteredName = trimCopy(inp);
+      if (enteredName.empty()) {
+        inp.clear();
+        break;
+      }
+
+      pl.name = enteredName;
       inp = "";
-      gs = GS::AGE;
+      auto itProfile = playerAges.find(pl.name);
+      if (itProfile != playerAges.end()) {
+        pl.age = itProfile->second;
+        gs = GS::CLASS;
+      } else {
+        pl.age = 0;
+        gs = GS::AGE;
+      }
     } else if (k == K::Backspace && !inp.empty())
       inp.pop_back();
     break;
   case GS::AGE:
     if (k == K::Enter && !inp.empty()) {
-      pl.age = std::stoi(inp);
+      int enteredAge = std::stoi(inp);
+      if (enteredAge <= 0 || enteredAge > 130) {
+        inp = "";
+        break;
+      }
+      pl.age = enteredAge;
+      savePlayerProfile(pl.name, pl.age);
       inp = "";
       gs = GS::CLASS;
     } else if (k == K::Backspace && !inp.empty())
@@ -239,11 +321,37 @@ void Game::handleKey(sf::Keyboard::Key k) {
       gs = (pl.s.hp <= 0) ? GS::DEAD : GS::MAP;
     break;
   case GS::DEAD:
-  case GS::WIN:
+    if (k == K::Left)
+      gameOverOffsetX -= 10.0f;
+    if (k == K::Right)
+      gameOverOffsetX += 10.0f;
+    if (k == K::Up)
+      gameOverOffsetY -= 10.0f;
+    if (k == K::Down)
+      gameOverOffsetY += 10.0f;
     if (k == K::Enter) {
       gs = GS::INTRO;
       it = 0;
       log.clear();
+      gameOverOffsetX = 0.0f;
+      gameOverOffsetY = 0.0f;
+    }
+    break;
+  case GS::WIN:
+    if (k == K::Left)
+      trophyOffsetX -= 10.0f;
+    if (k == K::Right)
+      trophyOffsetX += 10.0f;
+    if (k == K::Up)
+      trophyOffsetY -= 10.0f;
+    if (k == K::Down)
+      trophyOffsetY += 10.0f;
+    if (k == K::Enter) {
+      gs = GS::INTRO;
+      it = 0;
+      log.clear();
+      trophyOffsetX = 0.0f;
+      trophyOffsetY = 0.0f;
     }
     break;
   case GS::SHOP:
