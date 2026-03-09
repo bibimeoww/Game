@@ -35,6 +35,7 @@ Game::Game()
   setupSprite(texBoss, sprBoss, "boss.png", 48.0f);
   setupSprite(texItem, sprItem, "item.png", 32.0f);
   setupSprite(texStair, sprStair, "stair.png", 40.0f);
+  setupSprite(texMerchant, sprMerchant, "merchant.png", 48.0f);
 
   // โหลดรูป 3 อาชีพหน้าเลือกตัวละคร
   setupSprite(texWar, sprWar, "warrior.png", 80.0f);
@@ -46,6 +47,7 @@ Game::Game()
   setupSprite(texEneBatt, sprEneBatt, "enemy.png", 120.0f);
   setupSprite(texBossBatt, sprBossBatt, "boss.png", 120.0f);
 
+  // กราฟฟิกพื้นหลัง
   if (texBg.loadFromFile("character images/background.png")) {
     texBg.setSmooth(true);
     sprBg.setTexture(texBg, true);
@@ -96,7 +98,7 @@ void Game::loadFont() {
       "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
       nullptr};
   for (int i = 0; p[i]; i++)
-    if (fnt.openFromFile(p[i]))
+    if (fnt.loadFromFile(p[i]))
       return;
   std::cerr << "Font not found!\n";
 }
@@ -108,17 +110,17 @@ void Game::addLog(const std::string &s) {
 }
 
 void Game::events() {
-  while (auto eo = win.pollEvent()) {
-    auto &ev = *eo;
-    if (ev.is<sf::Event::Closed>()) {
+  sf::Event event;
+  while (win.pollEvent(event)) {
+    if (event.type == sf::Event::Closed) {
       win.close();
       return;
     }
-    if (auto *kp = ev.getIf<sf::Event::KeyPressed>())
-      handleKey(kp->code);
-    if (auto *te = ev.getIf<sf::Event::TextEntered>()) {
+    if (event.type == sf::Event::KeyPressed)
+      handleKey(event.key.code);
+    if (event.type == sf::Event::TextEntered) {
       if (gs == GS::NAME || gs == GS::AGE) {
-        char c = (char)te->unicode;
+        char c = (char)event.text.unicode;
         if (c >= 32 && c < 127 && inp.size() < 16) {
           if (gs == GS::AGE && (c < '0' || c > '9'))
             continue;
@@ -164,29 +166,23 @@ void Game::handleKey(sf::Keyboard::Key k) {
       gs = GS::MAP;
 
       if (pl.job == Job::WAR) {
-        // ตัวละครผู้เล่นในแมพ
         sprPlayer.setTexture(texWar, true);
         sprPlayer.setScale(
             {40.0f / texWar.getSize().x, 40.0f / texWar.getSize().y});
-        // ตัวละครผู้เล่นตอนต่อสสู้
         sprPlBatt.setTexture(texWar, true);
         sprPlBatt.setScale(
             {120.0f / texWar.getSize().x, 120.0f / texWar.getSize().y});
       } else if (pl.job == Job::MAG) {
-        //
         sprPlayer.setTexture(texMag, true);
         sprPlayer.setScale(
             {40.0f / texMag.getSize().x, 40.0f / texMag.getSize().y});
-        //
         sprPlBatt.setTexture(texMag, true);
         sprPlBatt.setScale(
             {120.0f / texMag.getSize().x, 120.0f / texMag.getSize().y});
       } else if (pl.job == Job::ROG) {
-        //
         sprPlayer.setTexture(texRog, true);
         sprPlayer.setScale(
             {40.0f / texRog.getSize().x, 40.0f / texRog.getSize().y});
-        //
         sprPlBatt.setTexture(texRog, true);
         sprPlBatt.setScale(
             {120.0f / texRog.getSize().x, 120.0f / texRog.getSize().y});
@@ -238,7 +234,40 @@ void Game::handleKey(sf::Keyboard::Key k) {
       log.clear();
     }
     break;
-  }
+  case GS::SHOP:
+
+    if(k == K::Up) shopSel = (shopSel + 2) % 3;
+    if(k == K::Down) shopSel = (shopSel + 1) % 3;
+
+    if(k == K::Enter){
+
+        if(shopSel == 0){ // potion
+            if(pl.gold >= 20){
+                pl.gold -= 20;
+                pl.inv.push_back({"Potion",40,0,0,"Restores HP"});
+                addLog("Bought Potion!");
+            }else{
+                addLog("Not enough gold!");
+            }
+        }
+
+        if(shopSel == 1){ // sword
+            if(pl.gold >= 50){
+                pl.gold -= 50;
+                pl.s.atk += 5;
+                addLog("Bought Sword! ATK +5");
+            }else{
+                addLog("Not enough gold!");
+            }
+        }
+
+        if(shopSel == 2){
+            gs = GS::MAP;
+        }
+    }
+
+  break;
+}
 }
 
 void Game::update(float dt) {
@@ -278,7 +307,10 @@ void Game::move(int dx, int dy) {
     pl.inv.push_back(mkItem());
     t.t = TT::FLOOR;
     addLog("Found an Item!");
-  } else if (t.t == TT::STAIR) {
+  }else if (t.t == TT::SHOP) {
+    openShop();
+  } 
+  else if (t.t == TT::STAIR) {
     if (enemyCount() == 0) {
       descend();
     } else {
@@ -289,3 +321,9 @@ void Game::move(int dx, int dy) {
   t.vis = true;
   updateVis();
 }
+
+void Game::openShop(){
+    shopSel = 0;
+    gs = GS::SHOP;
+}
+
