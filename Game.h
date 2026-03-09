@@ -38,6 +38,8 @@ private:
   // กราฟฟิกหน้าเลือกอาชีพ
   sf::Texture texWar, texMag, texRog;
   sf::Sprite sprWar, sprMag, sprRog;
+  sf::Texture texPotionShop, texSwordShop, texCoinShop;
+  sf::Sprite sprPotionShop, sprSwordShop, sprCoinShop;
 
   GS gs;
   Player pl;
