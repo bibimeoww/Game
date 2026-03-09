@@ -15,8 +15,8 @@ private:
   sf::Texture texPlayer;
   sf::Sprite sprPlayer;
   // กราฟฟิกแผนที่,สิ่งของ
-  sf::Texture texFloor, texWall, texStair, texEne, texBoss, texItem, texMerchant;
-  sf::Sprite sprFloor, sprWall, sprStair, sprEne, sprBoss, sprItem, sprMerchant;
+  sf::Texture texFloor, texWall, texGate, texEne, texBoss, texItem, texMerchant;
+  sf::Sprite sprFloor, sprWall, sprGate, sprEne, sprBoss, sprItem, sprMerchant;
   // กราฟฟิกหน้าตต่อสู้
   sf::Texture texPlBatt, texEneBatt, texBossBatt;
   sf::Sprite sprPlBatt, sprEneBatt, sprBossBatt;
