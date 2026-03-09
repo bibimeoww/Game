@@ -174,3 +174,4 @@ void Game::enemyTurn() {
   shk = 0.3f;
   battleEnd();
 }
+
