@@ -1,9 +1,7 @@
 #include "Game.h"
 #include <algorithm>
 #include <cctype>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 
 namespace {
 std::string trimCopy(const std::string &s) {
@@ -21,8 +19,8 @@ std::string trimCopy(const std::string &s) {
 } // namespace
 
 Game::Game()
-    : win(sf::VideoMode({W, H}), "DUNGEON OF FATE",
-          sf::Style::Titlebar | sf::Style::Close),
+    : win(sf::VideoMode::getDesktopMode(), "DUNGEON OF FATE",
+          sf::Style::Fullscreen),
       sprPlayer(texPlayer), sprWall(texWall), sprFloor(texFloor),
       sprEne(texEne), sprBoss(texBoss), sprItem(texItem), sprGate(texGate),
       sprMerchant(texMerchant),
@@ -36,8 +34,8 @@ Game::Game()
       cur(0), at(0), shk(0), mt(0), it(0) {
 
   win.setFramerateLimit(60);
+  win.setView(sf::View(sf::FloatRect(0.f, 0.f, (float)W, (float)H)));
   loadFont();
-  loadPlayerProfiles();
 
   // ฟังก์ชันตัวช่วยโหลดรูปและปรับขนาด
   auto setupSprite = [](sf::Texture &tex, sf::Sprite &spr,
@@ -119,44 +117,6 @@ Game::Game()
   setupSprite(texTrophy, sprTrophy, "trophy.png", 220.0f);
 }
 
-void Game::loadPlayerProfiles() {
-  playerAges.clear();
-  std::ifstream in("players.dat");
-  if (!in.is_open())
-    return;
-
-  std::string line;
-  while (std::getline(in, line)) {
-    if (line.empty())
-      continue;
-
-    std::istringstream ss(line);
-    int age = 0;
-    if (!(ss >> age))
-      continue;
-
-    std::string name;
-    std::getline(ss >> std::ws, name);
-    name = trimCopy(name);
-    if (name.empty())
-      continue;
-
-    playerAges[name] = age;
-  }
-}
-
-void Game::savePlayerProfile(const std::string &name, int age) {
-  playerAges[name] = age;
-
-  std::ofstream out("players.dat", std::ios::trunc);
-  if (!out.is_open())
-    return;
-
-  for (const auto &entry : playerAges) {
-    out << entry.second << " " << entry.first << "\n";
-  }
-}
-
 void Game::run() {
   sf::Clock clk;
   while (win.isOpen()) {
@@ -208,6 +168,11 @@ void Game::events() {
 
 void Game::handleKey(sf::Keyboard::Key k) {
   using K = sf::Keyboard::Key;
+  if (k == K::Escape) {
+    win.close();
+    return;
+  }
+
   switch (gs) {
   case GS::INTRO:
     if (k == K::Enter || k == K::Space)
@@ -223,14 +188,8 @@ void Game::handleKey(sf::Keyboard::Key k) {
 
       pl.name = enteredName;
       inp = "";
-      auto itProfile = playerAges.find(pl.name);
-      if (itProfile != playerAges.end()) {
-        pl.age = itProfile->second;
-        gs = GS::CLASS;
-      } else {
-        pl.age = 0;
-        gs = GS::AGE;
-      }
+      pl.age = 0;
+      gs = GS::AGE;
     } else if (k == K::Backspace && !inp.empty())
       inp.pop_back();
     break;
@@ -242,7 +201,6 @@ void Game::handleKey(sf::Keyboard::Key k) {
         break;
       }
       pl.age = enteredAge;
-      savePlayerProfile(pl.name, pl.age);
       inp = "";
       gs = GS::CLASS;
     } else if (k == K::Backspace && !inp.empty())
