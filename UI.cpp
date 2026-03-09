@@ -3,17 +3,17 @@
 
 void Game::dt_(const std::string &s, unsigned sz, sf::Color c, float x,
                float y) {
-  sf::Text t(fnt, s, sz);
+  sf::Text t(s, fnt, sz);
   t.setFillColor(c);
-  t.setPosition({x, y});
+  t.setPosition(x, y);
   win.draw(t);
 }
 
 void Game::dtc(const std::string &s, unsigned sz, sf::Color c, float cx,
                float y) {
-  sf::Text t(fnt, s, sz);
+  sf::Text t(s, fnt, sz);
   t.setFillColor(c);
-  t.setPosition({cx - t.getGlobalBounds().size.x / 2.f, y});
+  t.setPosition(cx - t.getGlobalBounds().width / 2.f, y);
   win.draw(t);
 }
 
@@ -59,6 +59,9 @@ void Game::draw() {
     break;
   case GS::MAP:
     dMap(sx, sy);
+    break;
+  case GS::SHOP:
+    dShop();
     break;
   case GS::BATTLE:
     dBattle(sx, sy);
@@ -236,6 +239,12 @@ void Game::dMap(float sx, float sy) {
         // ไอเทม (กล่องสีทอง ลอยขึ้นลงได้)
         float bob = std::sin(at * 3 + r) * 3.f;
         dr(tx + 12.f, ty + 12.f + bob, TS - 24.f, TS - 24.f, C_GOLD);
+      }else if (t.t == TT::SHOP) {
+        // ร้านค้า
+        float bob = std::sin(at * 3.5f + r + c) * 2.f;
+        sprMerchant.setPosition({tx + 4.f, ty + 4.f + bob});
+        win.draw(sprMerchant);
+        
       } else if (t.t == TT::ENE) {
         // ศัตรู
         float bob = std::sin(at * 4 + c) * 2.f;
@@ -276,8 +285,9 @@ void Game::dMap(float sx, float sy) {
   y += 18;
 
   dt_("EXP:", 12, C_TXT, ux + 10, y);
-  bar(ux + 34, y + 2, 166, 11, (float)pl.exp / 100.f, sf::Color(100, 180, 255));
-  dt_(ts(pl.exp) + "/100", 10, sf::Color::White, ux + 100, y + 1);
+  bar(ux + 34, y + 2, 166, 11, (float)pl.exp / (float)pl.nexp,
+      sf::Color(100, 180, 255));
+  dt_(ts(pl.exp) + "/" + ts(pl.nexp), 10, sf::Color::White, ux + 100, y + 1);
   y += 24;
 
   dt_("Lv." + ts(pl.lv), 24, C_PC, ux + 10, y);
@@ -420,4 +430,30 @@ void Game::dEvent() {
 void Game::dEnd(bool isWin) {
   isWin ? win.clear(sf::Color(20, 50, 20)) : win.clear(sf::Color(50, 20, 20));
   dtc(isWin ? "VICTORY!" : "GAME OVER", 56, isWin ? C_GOLD : C_HPL, 512, 120);
+}
+
+void Game::dShop(){
+
+    // กล่องร้านค้า
+    dr(200,150,780,420,C_UI);
+    dr(200,150,780,420,sf::Color::Transparent,true,sf::Color(120,80,200));
+
+    dtc("MERCHANT SHOP",36,C_GOLD,W/2,180);
+
+    std::string items[3] = {
+        "Potion (20 Gold)",
+        "Sword +5 ATK (50 Gold)",
+        "Exit"
+    };
+
+    for(int i=0;i<3;i++){
+
+        sf::Color c = (shopSel==i)?C_HI:C_TXT;
+
+        dtc(items[i],24,c,W/2,260 + i*60);
+    }
+
+    dtc("Gold: "+ts(pl.gold),20,C_GOLD,W/2,500);
+
+    dtc("UP/DOWN = Select   ENTER = Buy",16,C_TXT,W/2,440);
 }
