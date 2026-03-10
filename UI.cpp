@@ -144,7 +144,7 @@ void Game::dClass() {
 
   const char *desc[] = {
       "High HP+DEF\nSkill: Power Strike\n(2x ATK, 1-turn CD)",
-      "High ATK\nSkill: Fireball\n(3x, ignore DEF, 2-turn CD)",
+      "High ATK\nSkill: Fireball\n(3x, ignore DEF, 1-turn CD)",
       "High SPD\nSkill: Backstab\n(2.5x true dmg, 1-turn CD)"};
   Stats st[] = {
       {120, 120, 18, 12, 8}, {80, 80, 28, 6, 10}, {100, 100, 20, 8, 14}};
