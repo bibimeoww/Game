@@ -156,6 +156,11 @@ void Game::events() {
       handleKey(event.key.code);
     } else if (event.type == sf::Event::TextEntered) {
       char c = static_cast<char>(event.text.unicode);
+      if (suppressTextOnce) {
+        suppressTextOnce = false;
+        if (c == 'b' || c == 'B')
+          continue; // prevent "B" from being inserted when used as Back
+      }
       if (gs == GS::NAME && c >= 32 && c < 127 && inp.length() < 12) {
         inp += c;
       } else if (gs == GS::AGE && std::isdigit(static_cast<unsigned char>(c)) &&
@@ -179,6 +184,11 @@ void Game::handleKey(sf::Keyboard::Key k) {
       gs = GS::NAME;
     break;
   case GS::NAME:
+    if (k == K::B) {
+      inp.clear();
+      gs = GS::INTRO;
+      break;
+    }
     if (k == K::Enter && !inp.empty()) {
       std::string enteredName = trimCopy(inp);
       if (enteredName.empty()) {
@@ -194,6 +204,12 @@ void Game::handleKey(sf::Keyboard::Key k) {
       inp.pop_back();
     break;
   case GS::AGE:
+    if (k == K::B) {
+      suppressTextOnce = true;
+      inp = pl.name; // go back to edit name
+      gs = GS::NAME;
+      break;
+    }
     if (k == K::Enter && !inp.empty()) {
       int enteredAge = std::stoi(inp);
       if (enteredAge <= 0 || enteredAge > 130) {
@@ -207,6 +223,11 @@ void Game::handleKey(sf::Keyboard::Key k) {
       inp.pop_back();
     break;
   case GS::CLASS:
+    if (k == K::B) {
+      inp = ts(pl.age); // go back to edit age
+      gs = GS::AGE;
+      break;
+    }
     if (k == K::Left)
       selClass = (selClass + 2) % 3;
     if (k == K::Right)
@@ -242,6 +263,22 @@ void Game::handleKey(sf::Keyboard::Key k) {
     }
     break;
   case GS::MAP:
+    if (k == K::B) {
+      // Back is only allowed to character select on floor 1.
+      // On other floors, force a full restart from the title screen.
+      if (pl.floor <= 1) {
+        gs = GS::CLASS;
+      } else {
+        gs = GS::INTRO;
+        it = 0;
+        log.clear();
+        gameOverOffsetX = 0.0f;
+        gameOverOffsetY = 0.0f;
+        trophyOffsetX = 0.0f;
+        trophyOffsetY = 0.0f;
+      }
+      break;
+    }
     if (k == K::W || k == K::Up)
       move(0, -1);
     if (k == K::S || k == K::Down)
@@ -279,14 +316,6 @@ void Game::handleKey(sf::Keyboard::Key k) {
       gs = (pl.s.hp <= 0) ? GS::DEAD : GS::MAP;
     break;
   case GS::DEAD:
-    if (k == K::Left)
-      gameOverOffsetX -= 10.0f;
-    if (k == K::Right)
-      gameOverOffsetX += 10.0f;
-    if (k == K::Up)
-      gameOverOffsetY -= 10.0f;
-    if (k == K::Down)
-      gameOverOffsetY += 10.0f;
     if (k == K::Enter) {
       gs = GS::INTRO;
       it = 0;
@@ -296,14 +325,6 @@ void Game::handleKey(sf::Keyboard::Key k) {
     }
     break;
   case GS::WIN:
-    if (k == K::Left)
-      trophyOffsetX -= 10.0f;
-    if (k == K::Right)
-      trophyOffsetX += 10.0f;
-    if (k == K::Up)
-      trophyOffsetY -= 10.0f;
-    if (k == K::Down)
-      trophyOffsetY += 10.0f;
     if (k == K::Enter) {
       gs = GS::INTRO;
       it = 0;
@@ -313,7 +334,6 @@ void Game::handleKey(sf::Keyboard::Key k) {
     }
     break;
   case GS::SHOP:
-
     if(k == K::Up) shopSel = (shopSel + 2) % 3;
     if(k == K::Down) shopSel = (shopSel + 1) % 3;
 
