@@ -439,33 +439,19 @@ void Game::dEnd(bool isWin) {
   isWin ? win.clear(sf::Color(20, 50, 20)) : win.clear(sf::Color(50, 20, 20));
   sf::Text t(isWin ? "VICTORY!" : "GAME OVER", fnt, 56);
   t.setFillColor(isWin ? C_GOLD : C_HPL);
+  const float bob = std::sin(at * 3.0f) * (isWin ? 10.0f : 6.0f);
   sf::FloatRect b = t.getLocalBounds();
-  if (isWin) {
-    t.setPosition((W - b.width) / 2.f - b.left, 80.0f);
-  } else {
-    const float bob = std::sin(at * 3.0f) * 6.0f;
-    const float x = (W - b.width) / 2.f - b.left + gameOverOffsetX;
-    const float y = (H - b.height) / 2.f - b.top + bob + gameOverOffsetY;
-    t.setPosition(x, y);
-  }
+  t.setOrigin(b.left + b.width / 2.f, b.top + b.height / 2.f);
+  t.setPosition(W / 2.f, H / 2.f + bob);
   win.draw(t);
 
   if (isWin && texTrophy.getSize().x > 0 && texTrophy.getSize().y > 0) {
-    const float bob = std::sin(at * 3.0f) * 10.0f;
     const sf::FloatRect tb = sprTrophy.getGlobalBounds();
-    const float x = (W - tb.width) / 2.0f + trophyOffsetX;
-    const float y = (H - tb.height) / 2.0f + 30.0f + bob + trophyOffsetY;
-    sprTrophy.setPosition({x, y});
+    sprTrophy.setPosition({(W - tb.width) / 2.0f, (H - tb.height) / 2.0f - 120.0f + bob});
     win.draw(sprTrophy);
-    dtc("ARROWS = Move Trophy  |  ENTER = Back to Title", 16, C_TXT, W / 2.0f,
-        H - 70.0f);
+    dtc("Press ENTER to continue", 16, C_TXT, W / 2.0f, H - 70.0f);
   } else {
-    if (isWin) {
-      dtc("Press ENTER to continue", 16, C_TXT, W / 2.0f, H - 70.0f);
-    } else {
-      dtc("ARROWS = Move Text  |  ENTER = Back to Title", 16, C_TXT, W / 2.0f,
-          H - 70.0f);
-    }
+    dtc("Press ENTER to continue", 16, C_TXT, W / 2.0f, H - 70.0f);
   }
 }
 
