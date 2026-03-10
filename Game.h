@@ -50,6 +50,7 @@ private:
   GS gs;
   Player pl;
   std::string inp;
+  bool suppressTextOnce = false;
   float cur, at, shk, mt, it;
   int selClass, selAct;
   int shopSel = 0;
