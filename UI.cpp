@@ -144,7 +144,7 @@ void Game::dClass() {
 
   const char *desc[] = {
       "High HP+DEF\nSkill: Power Strike\n(2x ATK, 1-turn CD)",
-      "High ATK\nSkill: Fireball\n(3x, ignore DEF, 1-turn CD)",
+      "High ATK\nSkill: Fireball\n(3x, ignore DEF, 2-turn CD)",
       "High SPD\nSkill: Backstab\n(2.5x true dmg, 1-turn CD)"};
   Stats st[] = {
       {120, 120, 18, 12, 8}, {80, 80, 28, 6, 10}, {100, 100, 20, 8, 14}};
@@ -287,6 +287,8 @@ void Game::dMap(float sx, float sy) {
   dt_(pl.name, 18, C_GOLD, ux + 10, y);
   y += 26;
   dt_(jname(pl.job) + " Age:" + ts(pl.age), 13, C_TXT, ux + 10, y);
+  y += 22;
+  dt_("Floor: " + ts(pl.floor) + "/9", 14, C_STAIR, ux + 10, y);
   y += 22;
   dt_("HP:", 12, C_TXT, ux + 10, y);
   bar(ux + 34, y + 2, 166, 11, (float)pl.s.hp / pl.s.mhp, C_HP);
