@@ -123,20 +123,20 @@ void Game::doPlayerAction(int a) {
     int d = 0;
     if (pl.job == Job::WAR) {
       d = dmg(pl.s.atk, batt.s.def, 2.f);
-      pl.scd = 1;
       addLog("Power Strike! " + ts(d) + " dmg!");
       skillAnimTime = 0.5f; // trigger skill animation
     } else if (pl.job == Job::MAG) {
       d = dmg(pl.s.atk, 0, 3.f);
-      pl.scd = 2;
       addLog("Fireball! " + ts(d) + " magic!");
       skillAnimTime = 0.5f; // trigger skill animation
     } else {
       d = dmg(pl.s.atk, 0, 2.5f);
-      pl.scd = 1;
       addLog("Backstab! " + ts(d) + " true dmg!");
       skillAnimTime = 0.5f; // trigger skill animation
     }
+    // Unified skill rule: all classes can use skill once per 2 turns.
+    // (After using skill, you must take 1 non-skill turn before skill is available again.)
+    pl.scd = 1;
     batt.s.hp -= d;
   } else if (a == 2) {
     if (pl.inv.empty()) {
